@@ -1,0 +1,68 @@
+Design Task: Create a Kenken generator
+
+Goal: Create a tool to generate new KenKens that are valid KenKens and which can be solved.
+
+Components:
+- Gui
+-- Show Ken Ken
+-- Let user enter numbers
+-- Show solution
+-- Check solution
+- Structure for generating Kenkens *DONE
+- Structure for solving Kenkens given input
+- Valid_KENKEN: Return 1 if a KENKEN is valid, 0 otherwise
+
+
+
+
+A KenKen is:
+	- 36 squares (store values in 2D array)
+	- the numbers 1-6 in each row and column
+	- up to 36 conditions
+	- Each condition is a structure with a
+		- linked list of values, positions
+		- an operation and a value for said operation
+		- the edges of a condition must touch another square within the same condition
+	- single square conditions have no operation (null)
+	- minus and division conditions must have only 2 arguments
+	- A division condition must return 0 under any mod function 
+
+Random Generation Algorithm
+	- Must first (randomly) generate a valid grid
+	- (this guarantees that the puzzle will have at least 1 solution)
+	- Must then (randomly) generate a list of constraints
+	
+Grid Algorithm:
+	- For each square:
+		- moving first left, then down, Check available numbers
+			- create list/array from 1-6
+			- check all squares to left
+			- for each number in such a square, remove it from the available numbers
+			- check all squares above
+			- as above
+		- randomly select number from available numbers
+
+Constraint Algorithm:
+- List of free squares
+- create:
+	- 1 4-square (randomly assign addition or multiplication)
+	- 4 3-squares (as above)
+	- create 2 squares until no more are possible
+	- create 1 squares
+- to create a constraint:
+	-randomly add squares to constraint, using a walk algorithm
+	-based on the number of squares, randomly select an operation
+	-take list of squares and values, and use this alongside the operation to generate the result
+	-add constraint to the list of constraints
+	
+GUI
+Task 1:
+- Create a window which displays a valid Kenken
+- Create a 7x7 array of points, with positions based on window sizes
+- Create a 7x6 array of vertical edges (1/0 for boundary/non boundary)
+- Create a 6x7 array of horizontal edges
+- For each constraint:
+	- Take cell value
+	- Add vertical edges to a vertical edge list
+	- Add horizontal edges to a horizontal edge list
+	- Check to see if a V element occurs more than once. If so, set V edge to 0. Else, do nothing.
