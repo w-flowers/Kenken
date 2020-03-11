@@ -600,8 +600,8 @@ int remove_available_sqr(int available[36][2], int sqr[2]){
 }
 
 int valid_partial_kenken(struct kenken kenken){
-	if(!valid_partial_grid(kenken_ptr->grid)) return 0;
-	for(struct node_ctr *d_ptr = kenken_ptr->ctrs; d_ptr != 0; d_ptr = d_ptr->next_node){
+	if(!valid_partial_grid(kenken.grid)) return 0;
+	for(struct node_ctr *d_ptr = kenken.ctrs; d_ptr != 0; d_ptr = d_ptr->next_node){
 		if(!valid_partial_constraint(&(d_ptr->constraint))){
 			//printf("Invalid constraint\n");
 			return 0;
@@ -647,7 +647,7 @@ int valid_partial_constraint(struct constraint *ptr){
 			if(a_ptr->entry == 0) zero_eles++;
 		}
 		if(zero_eles == 0 && test_res != ptr->result) return 0;
-		if(zero_eles > 0 && (test_res > ptr->result - zero_eles || test_res < ptr->result + 6*zero_eles)) return 0;
+		if(zero_eles > 0 && (test_res > ptr->result - zero_eles || test_res < ptr->result - 6*zero_eles)) return 0;
 	}
 	//check correct number of arguments for subtraction
 	if(ptr->op == SUBOP){
@@ -700,7 +700,7 @@ int valid_partial_constraint(struct constraint *ptr){
 			printf("list too long\n");
 			return 0;
 		}
-		else if(ptr->result != (ptr->numbers)->entry && (ptr->numbers)->entry != 0){
+		else if((ptr->result != (ptr->numbers)->entry) && ((ptr->numbers)->entry != 0)){
 			printf("unequal values\n");
 			return 0;
 		}

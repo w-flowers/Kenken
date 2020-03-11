@@ -105,6 +105,13 @@ int main( int argc, char* args[] )
 				rects[i].h = SQR_SIZE-1;
 			}
 			
+			SDL_Rect testbox;
+			
+			testbox.x = MARGIN + SQR_SIZE*7+3;
+			testbox.y = MARGIN;
+			testbox.w = SQR_SIZE;
+			testbox.h = SQR_SIZE;
+			
 			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
 			
 			for(int i = 0; i < 36; i++){
@@ -169,6 +176,16 @@ int main( int argc, char* args[] )
 			for(int i = 0; i < 6; i++){
 				for(int j = 0; j < 6; j++){
 					usrgrid[i][j] = 0;
+				}
+			}
+			
+			struct kenken usrkk = {game.ctrs, usrgrid};
+			
+			//usrkk.grid = usrgrid;
+			//usrkk.ctrs = game.ctrs;
+			for(struct node_ctr *dmy = usrkk.ctrs; dmy != 0; dmy = dmy->next_node){
+				for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+					dmy2->entry = usrgrid[dmy2->pos[0]][dmy2->pos[1]];
 				}
 			}
 			
@@ -282,6 +299,21 @@ int main( int argc, char* args[] )
 				}
 				
 				draw_central_numbers(renderer, num_texts, rects, txtboxdim, usrgrid);
+				
+				for(struct node_ctr *dmy = usrkk.ctrs; dmy != 0; dmy = dmy->next_node){
+					for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+						dmy2->entry = usrgrid[dmy2->pos[0]][dmy2->pos[1]];
+					}
+				}
+				
+				if(valid_partial_kenken(usrkk)){
+					SDL_SetRenderDrawColor(renderer, 210, 10, 10, SDL_ALPHA_OPAQUE);
+				}
+				else{
+					SDL_SetRenderDrawColor(renderer, 10, 210, 10, SDL_ALPHA_OPAQUE);
+				}
+				SDL_RenderFillRect(renderer, &testbox);
+				
 				
 				SDL_RenderPresent(renderer);
 		    }
