@@ -632,7 +632,7 @@ int valid_partial_grid(int arr[6][6]){
 	return 1;
 }
 
-                 
+//testing github                
 int valid_partial_constraint(struct constraint *ptr){
 	//check for valid value of operation
 	if((ptr->op) < 0 || (ptr->op) > 4) return 0;
