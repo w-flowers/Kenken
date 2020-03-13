@@ -697,11 +697,11 @@ int valid_partial_constraint(struct constraint *ptr){
 	//check value of result given op
 	if(ptr->op == NOOP){
 		if(list_length(ptr->numbers) != 1){
-			printf("list too long\n");
+			//printf("list too long\n");
 			return 0;
 		}
 		else if((ptr->result != (ptr->numbers)->entry) && ((ptr->numbers)->entry != 0)){
-			printf("unequal values\n");
+			//printf("unequal values\n");
 			return 0;
 		}
 		else return 1;

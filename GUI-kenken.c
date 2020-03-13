@@ -12,6 +12,9 @@ const int SOLUTION_BOX = 15;
 const int SMALL_FONT = 14;
 const int BIG_FONT = 60;
 
+
+int update_usr_kenken(struct kenken *usrkk);
+
 int update_edge_arrays(int vertedge[5][6], int horiedge[6][5], struct constraint *cstr);
 
 int set_kenken_boundaries(int vertedge[5][6], int horiedge[6][5], struct kenken* kenkenptr);
@@ -53,7 +56,7 @@ int main( int argc, char* args[] )
     else
     {
         //Create window
-        window = SDL_CreateWindow("Potato", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+        window = SDL_CreateWindow("Kenny's Ken Ken Ken-undrum", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
         if( window == NULL )
         {
             printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -61,9 +64,6 @@ int main( int argc, char* args[] )
         else
         {
 			renderer = SDL_CreateRenderer(window, -1, 0);
-			//SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
-            //Get window surface
-            //screenSurface = SDL_GetWindowSurface( window );
 			if(TTF_Init()==-1) {
     			printf("TTF_Init: %s\n", TTF_GetError());
    		 		exit(2);
@@ -71,23 +71,13 @@ int main( int argc, char* args[] )
 			
 			TTF_Font *font2;
 			font2 = TTF_OpenFont("OpenSans-Regular.ttf", BIG_FONT);
-			/*Fill the surface white
-            SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-			texture = SDL_CreateTextureFromSurface(renderer, screenSurface);
-			//SDL_FreeSurface(screenSurface);*/
 			SDL_Rect texture_rect;
 			texture_rect.x = 0;  //the x coordinate
 			texture_rect.y = 0; // the y coordinate
 			texture_rect.w = SCREEN_WIDTH; //the width of the texture
-			texture_rect.h = SCREEN_HEIGHT; //the height of the texture
-			
-			
-			//Update the surface
-            //SDL_UpdateWindowSurface( window );		
+			texture_rect.h = SCREEN_HEIGHT; //the height of the texture	
 			
 			SDL_RenderSetScale(renderer, 1.0, 1.0);
-			
-			
 			
 			SDL_Point points[49];
 			
@@ -96,6 +86,7 @@ int main( int argc, char* args[] )
 				points[i].y = MARGIN + SQR_SIZE*(i/7);
 			}
 			
+			//Squares for the game
 			SDL_Rect rects[36];
 			
 			for(int i = 0; i < 36; i++){
@@ -105,6 +96,7 @@ int main( int argc, char* args[] )
 				rects[i].h = SQR_SIZE-1;
 			}
 			
+			//Box for displaying the status of the kenken
 			SDL_Rect testbox;
 			
 			testbox.x = MARGIN + SQR_SIZE*7+3;
@@ -171,21 +163,21 @@ int main( int argc, char* args[] )
 				tlhead = element;
 			}
 			
-			int usrgrid[6][6];
+			
+			struct kenken usrkk;
 			
 			for(int i = 0; i < 6; i++){
 				for(int j = 0; j < 6; j++){
-					usrgrid[i][j] = 0;
+					usrkk.grid[i][j] = 0;
 				}
 			}
 			
-			struct kenken usrkk = {game.ctrs, usrgrid};
-			
 			//usrkk.grid = usrgrid;
-			//usrkk.ctrs = game.ctrs;
+			struct node_ctr dummy_ctr = *game.ctrs;
+			usrkk.ctrs = &dummy_ctr;
 			for(struct node_ctr *dmy = usrkk.ctrs; dmy != 0; dmy = dmy->next_node){
 				for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-					dmy2->entry = usrgrid[dmy2->pos[0]][dmy2->pos[1]];
+					dmy2->entry = usrkk.grid[dmy2->pos[0]][dmy2->pos[1]];
 				}
 			}
 			
@@ -260,29 +252,29 @@ int main( int argc, char* args[] )
 						}
 						break;
 						case SDLK_BACKSPACE:
-						usrgrid[selected_index%6][selected_index/6] = 0;
+						usrkk.grid[selected_index%6][selected_index/6] = 0;
 						break;
 						case SDLK_1:
-						usrgrid[selected_index%6][selected_index/6] = 1;
+						usrkk.grid[selected_index%6][selected_index/6] = 1;
 						break;
 						case SDLK_2:
-						usrgrid[selected_index%6][selected_index/6] = 2;
+						usrkk.grid[selected_index%6][selected_index/6] = 2;
 						break;
 						case SDLK_3:
-						usrgrid[selected_index%6][selected_index/6] = 3;
+						usrkk.grid[selected_index%6][selected_index/6] = 3;
 						break;
 						case SDLK_4:
-						usrgrid[selected_index%6][selected_index/6] = 4;
+						usrkk.grid[selected_index%6][selected_index/6] = 4;
 						break;
 						case SDLK_5:
-						usrgrid[selected_index%6][selected_index/6] = 5;
+						usrkk.grid[selected_index%6][selected_index/6] = 5;
 						break;
 						case SDLK_6:
-						usrgrid[selected_index%6][selected_index/6] = 6;
+						usrkk.grid[selected_index%6][selected_index/6] = 6;
 						break;
 					}
 					
-					//update_usr_kenken(usrgrid, usrkenken)
+					update_usr_kenken(&usrkk);
 				
 				}
 				
@@ -298,13 +290,7 @@ int main( int argc, char* args[] )
 					}
 				}
 				
-				draw_central_numbers(renderer, num_texts, rects, txtboxdim, usrgrid);
-				
-				for(struct node_ctr *dmy = usrkk.ctrs; dmy != 0; dmy = dmy->next_node){
-					for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-						dmy2->entry = usrgrid[dmy2->pos[0]][dmy2->pos[1]];
-					}
-				}
+				draw_central_numbers(renderer, num_texts, rects, txtboxdim, usrkk.grid);
 				
 				if(valid_partial_kenken(usrkk)){
 					SDL_SetRenderDrawColor(renderer, 210, 10, 10, SDL_ALPHA_OPAQUE);
@@ -335,6 +321,15 @@ int main( int argc, char* args[] )
     SDL_Quit();
 
     return 0;
+}
+
+int update_usr_kenken(struct kenken *usrkk){
+	for(struct node_ctr *dmy = usrkk->ctrs; dmy != 0; dmy = dmy->next_node){
+		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+			dmy2->entry = usrkk->grid[dmy2->pos[0]][dmy2->pos[1]];
+		}
+	}
+	return 0;
 }
 
 int draw_function(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect *text_rect_ptr, SDL_Point corners[5], SDL_Point points[49], SDL_Rect rects[36], SDL_Rect *selected_sqr, int vertedge[5][6], int horiedge[6][5]){
