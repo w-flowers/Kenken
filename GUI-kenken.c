@@ -2,6 +2,10 @@
 #include <SDL2/SDL.h>
 #include "kenken.c"
 #include "SDL2/SDL_ttf.h"
+#define NONE 0
+#define INCORRECT 1
+#define PARTCORRECT 2
+#define CORRECT 3
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 720;
@@ -10,6 +14,7 @@ const int MARGIN = 30;
 const int SQR_SIZE = 72;
 const int SOLUTION_BOX = 15;
 const int SMALL_FONT = 14;
+const int MEDIUM_FONT = 28;
 const int BIG_FONT = 60;
 
 
@@ -19,7 +24,7 @@ int update_edge_arrays(int vertedge[5][6], int horiedge[6][5], struct constraint
 
 int set_kenken_boundaries(int vertedge[5][6], int horiedge[6][5], struct kenken* kenkenptr);
 
-int draw_function(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect *text_rect_ptr, SDL_Point corners[5], SDL_Point points[49], SDL_Rect rects[36], SDL_Rect *selected_sqr, int vertedge[5][6], int horiedge[6][5]);
+int draw_function(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect *text_rect_ptr, SDL_Point corners[5], SDL_Point points[49], SDL_Rect rects[36], SDL_Rect *selected_sqr, int vertedge[5][6], int horiedge[6][5], SDL_Point checkbtn_cnrs[5], SDL_Rect *check_kk_btn);
 
 struct node_ctrdraw{
 	int result;				//the result of the operation
@@ -97,12 +102,24 @@ int main( int argc, char* args[] )
 			}
 			
 			//Box for displaying the status of the kenken
-			SDL_Rect testbox;
+			SDL_Rect check_kk_btn;
 			
-			testbox.x = MARGIN + SQR_SIZE*7+3;
-			testbox.y = MARGIN;
-			testbox.w = 2*SQR_SIZE;
-			testbox.h = SQR_SIZE;
+			check_kk_btn.x = MARGIN + SQR_SIZE*7+3;
+			check_kk_btn.y = MARGIN;
+			check_kk_btn.w = 2*SQR_SIZE;
+			check_kk_btn.h = SQR_SIZE;
+			
+			SDL_Point checkbtn_cnrs[5];
+			checkbtn_cnrs[0].x = check_kk_btn.x-1;
+			checkbtn_cnrs[0].y = check_kk_btn.y-1;
+			checkbtn_cnrs[1].x = check_kk_btn.x+check_kk_btn.w;
+			checkbtn_cnrs[1].y = check_kk_btn.y-1;
+			checkbtn_cnrs[2].x = check_kk_btn.x+check_kk_btn.w;
+			checkbtn_cnrs[2].y = check_kk_btn.y+check_kk_btn.h;
+			checkbtn_cnrs[3].x = check_kk_btn.x-1;
+			checkbtn_cnrs[3].y = check_kk_btn.y+check_kk_btn.h;
+			checkbtn_cnrs[4].x = checkbtn_cnrs[0].x;
+			checkbtn_cnrs[4].y = checkbtn_cnrs[0].y;
 			
 			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
 			
@@ -195,6 +212,8 @@ int main( int argc, char* args[] )
 			
 			int selected_index = 0;
 			
+			int check_msg_status = NONE;
+			
 			//SDL_RenderPresent(renderer);
 			
 			while(!quit)
@@ -220,6 +239,13 @@ int main( int argc, char* args[] )
 
 				 		}
 				 	}
+					if( e.button.x > check_kk_btn.x && e.button.x < check_kk_btn.x + check_kk_btn.w && e.button.y > check_kk_btn.y && e.button.y < check_kk_btn.y + check_kk_btn.h){
+						if(valid_partial_kenken(usrkk)){
+							if(kenken_valid(&usrkk)) check_msg_status = CORRECT;
+							else check_msg_status = PARTCORRECT;
+						}
+						else check_msg_status = INCORRECT;
+					}
 				}
 				if( e.type == SDL_KEYDOWN){
 					switch(e.key.keysym.sym){
@@ -274,11 +300,7 @@ int main( int argc, char* args[] )
 				
 				}
 				
-				//SDL_RenderClear(renderer);
-			
-	 			//SDL_RenderCopy(renderer, texture, NULL, &texture_rect);
-				
-				draw_function(window, renderer, &texture_rect, corners, points, rects, selected_sqr, vertedge, horiedge);
+				draw_function(window, renderer, &texture_rect, corners, points, rects, selected_sqr, vertedge, horiedge, checkbtn_cnrs, &check_kk_btn);
 				
 				for(int i = 0; i < 36; i++){
 					if(textrects[i] != NULL){
@@ -288,14 +310,12 @@ int main( int argc, char* args[] )
 				
 				draw_central_numbers(renderer, num_texts, rects, txtboxdim, usrkk.grid);
 				
-				if(valid_partial_kenken(usrkk)){
-					SDL_SetRenderDrawColor(renderer, 210, 10, 10, SDL_ALPHA_OPAQUE);
-				}
-				else{
+				/*if(valid_partial_kenken(usrkk)){
 					SDL_SetRenderDrawColor(renderer, 10, 210, 10, SDL_ALPHA_OPAQUE);
 				}
-				SDL_RenderFillRect(renderer, &testbox);
-				
+				else{
+					SDL_SetRenderDrawColor(renderer, 210, 10, 10, SDL_ALPHA_OPAQUE);
+				}*/
 				
 				SDL_RenderPresent(renderer);
 		    }
@@ -311,8 +331,6 @@ int main( int argc, char* args[] )
     //Destroy window
     SDL_DestroyWindow( window );
 	
-	
-
     //Quit SDL subsystems
     SDL_Quit();
 
@@ -328,16 +346,20 @@ int update_usr_kenken(struct kenken *usrkk){
 	return 0;
 }
 
-int draw_function(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect *text_rect_ptr, SDL_Point corners[5], SDL_Point points[49], SDL_Rect rects[36], SDL_Rect *selected_sqr, int vertedge[5][6], int horiedge[6][5]){
+int draw_function(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect *text_rect_ptr, SDL_Point corners[5], SDL_Point points[49], SDL_Rect rects[36], SDL_Rect *selected_sqr, int vertedge[5][6], int horiedge[6][5], SDL_Point checkbtn_cnrs[5], SDL_Rect *check_kk_btn){
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
 	SDL_RenderFillRect(renderer, text_rect_ptr);
 	
 	SDL_SetRenderDrawColor(renderer, 245, 245, 245, SDL_ALPHA_OPAQUE);
 	SDL_RenderFillRects(renderer, rects, 36);
 	
+	SDL_SetRenderDrawColor(renderer, 255, 235, 245, SDL_ALPHA_OPAQUE);
+	SDL_RenderFillRect(renderer, check_kk_btn);
+	
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderDrawPoints(renderer, points, 49);
 	SDL_RenderDrawLines(renderer, corners, 5);
+	SDL_RenderDrawLines(renderer, checkbtn_cnrs, 5);
 	
 	for(int i = 0; i < 6; i++){
 		for(int j = 0; j < 5; j++){
@@ -427,6 +449,8 @@ int draw_central_numbers(SDL_Renderer *renderer, SDL_Texture *num_texts[6], SDL_
 	}
 	return 0;
 }
+
+//function to draw button to check kenken
 
 //vertedge and horiedge are indexed according to the square above/left of them
 int update_edge_arrays(int vertedge[5][6], int horiedge[6][5], struct constraint *cstr){
