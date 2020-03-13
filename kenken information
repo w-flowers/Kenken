@@ -66,3 +66,7 @@ Task 1:
 	- Add vertical edges to a vertical edge list
 	- Add horizontal edges to a horizontal edge list
 	- Check to see if a V element occurs more than once. If so, set V edge to 0. Else, do nothing.
+	
+GUI Design:
+- Add a box displaying the current status of the if the button to check progress is pressed
+

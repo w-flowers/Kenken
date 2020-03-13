@@ -101,7 +101,7 @@ int main( int argc, char* args[] )
 			
 			testbox.x = MARGIN + SQR_SIZE*7+3;
 			testbox.y = MARGIN;
-			testbox.w = SQR_SIZE;
+			testbox.w = 2*SQR_SIZE;
 			testbox.h = SQR_SIZE;
 			
 			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
@@ -175,11 +175,7 @@ int main( int argc, char* args[] )
 			//usrkk.grid = usrgrid;
 			struct node_ctr dummy_ctr = *game.ctrs;
 			usrkk.ctrs = &dummy_ctr;
-			for(struct node_ctr *dmy = usrkk.ctrs; dmy != 0; dmy = dmy->next_node){
-				for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-					dmy2->entry = usrkk.grid[dmy2->pos[0]][dmy2->pos[1]];
-				}
-			}
+			update_usr_kenken(&usrkk);
 			
 			draw_corner_number_textures(renderer, tlhead, textrects, corner_numbers);
 			
