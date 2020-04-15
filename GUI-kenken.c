@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
-#include "kenken.c"
 #include "SDL2/SDL_ttf.h"
+#include"kenken.c"
 #define NONE 0
 #define INCORRECT 1
 #define PARTCORRECT 2
@@ -52,6 +52,8 @@ int main( int argc, char* args[] )
 	//SDL_Texture* texture = NULL;
 	
 	SDL_Renderer* renderer = NULL;
+	
+	srand(time(NULL));
 
     //Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 )

@@ -55,6 +55,28 @@ Constraint Algorithm:
 	-take list of squares and values, and use this alongside the operation to generate the result
 	-add constraint to the list of constraints
 	
+Solver Algorithm:
+- For each square, maintain an array of possible values (must be updated)
+- Walk through constraint list, using constraint conditions and filled squares to reduce possibilities
+- Strategy 1 - Brute force from the available lists
+- "Try" a value
+- Then "Try values ahead"
+- If path Fails, remove this value and revert puzzle availabilities to their previous state
+- Path will not return success until puzzle finishes
+- Fill any 1-cages
+- row evaluation - determine if there are any elements that must go in a square/cage
+- Do this by finding "blocks"
+- column evalutaion
+- 
+
+Take 2:
+
+- Select square in constraint
+- Reduce square options
+- randomly assign element
+- check return value of next square in constraint
+- 
+	
 GUI
 Task 1:
 - Create a window which displays a valid Kenken
@@ -69,4 +91,10 @@ Task 1:
 	
 GUI Design:
 - Add a box displaying the current status of the if the button to check progress is pressed
+- Add a box to display solution
+- Add a box to give a new puzzle
+
+
+
+
 

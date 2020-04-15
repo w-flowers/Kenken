@@ -166,7 +166,7 @@ int valid_constraint(struct constraint *ptr){
 		if(list_length(ptr->numbers) != 2) return 0;
 		int a = (ptr->numbers)->entry;
 		int b = ((ptr->numbers)->next_node)->entry;
-		if(a == b) return 0;
+		if(a == b || a <= 0 || b <= 0) return 0;
 		if(a > b){
 			if((a/b) != ptr->result || a%b != 0) return 0;
 		}
@@ -181,7 +181,7 @@ int valid_constraint(struct constraint *ptr){
 			return 0;
 		}
 		else if(ptr->result != (ptr->numbers)->entry){
-			printf("unequal values\n");
+			//printf("unequal values\n");
 			return 0;
 		}
 		else return 1;
@@ -266,6 +266,7 @@ int random_available(int available[6]){ //picks a random number from a list, pad
 	int i = 0;
 	for(int *k = &available[0]; *k != 0 && k < &available[6]; k++) i++;
 	if(i == 1) return available[0];
+	if(i == 0) return 0;
 	int index = rand() % (i);
 	return available[index];
 }
@@ -308,9 +309,11 @@ int fill_square(int i, int j, int arr[6][6]){
 }
 
 int generate_kenken(struct kenken *kenkenptr){
-	srand(time(NULL));
+	//srand(time(NULL));
 	r_fill_grid(kenkenptr->grid);
+	//printf("Filled the grid\n");
 	int x = generate_constraints(kenkenptr);
+	//printf("generated the constraints\n");
 	return x;
 }
 
@@ -332,6 +335,7 @@ int destroy_kenken(struct kenken *kenkenptr){
 }
 
 int generate_constraints(struct kenken *kenkenptr){
+	//printf("entered gc\n");
 	int available[36][2];
 	for(int i = 0; i < 36; i++){ //creates list of avaiable squares for a constraint
 		available[i][0] = i/6;
@@ -351,7 +355,7 @@ int generate_constraints(struct kenken *kenkenptr){
 	
 	//creates up to 2 constraints of 3 squares (this can fail)
 	int counter = 0;
-	while(counter < 2){
+	while(counter < 3){
 		list = random_square_walk(3, available, kenkenptr->grid);
 		if(list != NULL){
 			struct node_ctr *next_ele = (struct node_ctr *)malloc(sizeof(struct node_ctr));
@@ -359,9 +363,9 @@ int generate_constraints(struct kenken *kenkenptr){
 			create_constraint(r_assign_op(3, 4, 5), list, &(next_ele->constraint));
 			next_ele->next_node = dummy_ptr;
 			dummy_ptr = next_ele;
-			counter++;
 			//printf("3 square, head, %p, tail\n", dummy_ptr);
 		}
+		counter++;
 	}
 	
 	//creates up to 15 constraints of length 2 (this can create less due to random failure)
@@ -387,8 +391,9 @@ int generate_constraints(struct kenken *kenkenptr){
 			create_constraint(r_assign_op(1, 4, 5), list, &(next_ele->constraint));
 			next_ele->next_node = dummy_ptr;
 			dummy_ptr = next_ele;
-			if(available[0][0] == 6 || available[0][1] == 6) break;
+			//if(available[0][0] == 6 || available[0][1] == 6) break;
 		}
+		if(available[0][0] == 6 || available[0][1] == 6) break;
 	}
 	
 	
@@ -398,7 +403,7 @@ int generate_constraints(struct kenken *kenkenptr){
 }
 
 struct node_square *random_square_walk(int length, int arr[36][2], int kenken[6][6]){
-	
+	//printf("entered random squarewalk\n");
 	struct node_square *head;
 	int dmy_arr[36][2];
 	for(int i = 0; i < 36; i++){
@@ -480,6 +485,8 @@ struct node_square *random_square_walk(int length, int arr[36][2], int kenken[6]
 
 int create_constraint(int oper, struct node_square *ctr_sqrs, struct constraint *ctr){
 	//THIS FUNCTION DOES NOT HANDLE LOGIC, AND ASSUMES IT RECEIVES LISTS OF THE CORRECT LENGTHS AND CORRESPONDING OPERATIONS
+	
+	//printf("entered create_constraint\n");
 	ctr->op = oper;
 	ctr->numbers = ctr_sqrs;
 	if(oper == ADDOP){		//add
@@ -530,6 +537,7 @@ int create_constraint(int oper, struct node_square *ctr_sqrs, struct constraint 
 }
 
 int r_assign_op(int length, int arg1, int arg2){
+	//printf("entered random assignop\n");
 	//srand(time(NULL));
 	if(length == 1) return NOOP;
 	if(length == 2 && (arg1 % arg2 == 0 || arg2 % arg1 == 0)) return rand() % 4; //assumes a 2 square cannot have two of the same number
@@ -688,10 +696,10 @@ int valid_partial_constraint(struct constraint *ptr){
 			if((b/a) != ptr->result || b%a != 0) return 0;
 		}
 		if(a == 0 && b != 0){
-			if(ptr->result * b > 6 && b % ptr->result) return 0;
+			if(ptr->result * b > 6 && b % ptr->result != 0) return 0;
 		}
 		if(b == 0 && a != 0){
-			if(ptr->result * a > 6 && a % ptr->result) return 0;
+			if(ptr->result * a > 6 && a % ptr->result != 0) return 0;
 		}
 	}
 	//check value of result given op
