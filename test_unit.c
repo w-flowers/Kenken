@@ -1,7 +1,5 @@
 #include "kenken-solver.c"
 
-int update_usr_kenken(struct kenken *usrkk);
-
 int main(){
 	//printf("Main entered");
 	srand(time(NULL));
@@ -53,14 +51,5 @@ int main(){
 	printf("os%dns%dms%d\n", onesol, nosol, multsol);
 	t2 = (int) time(NULL);
 	printf("%ds\n", (t2-t1));
-	return 0;
-}
-
-int update_usr_kenken(struct kenken *usrkk){
-	for(struct node_ctr *dmy = usrkk->ctrs; dmy != 0; dmy = dmy->next_node){
-		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-			dmy2->entry = usrkk->grid[dmy2->pos[0]][dmy2->pos[1]];
-		}
-	}
 	return 0;
 }

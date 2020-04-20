@@ -63,6 +63,7 @@ int random_available(int[6]);
 
 int remove_available(int*, int);
 //removes a given number (1-6) from the list of available numbers for a square **TESTED -- WORKS
+//returns 1 if an element is removed, 0 otherwise
 
 int fill_square(int, int, int [6][6]);
 //fills squares of grid for generate function **TESTED -- WORKS
@@ -99,15 +100,11 @@ int (* random_available_sqr(int [36][2], int[2], int[4][2]))[2];
 
 int remove_available_sqr(int [36][2], int[2]);
 //removes a given square i 0-5, j 0-5, from the list of available squares **TESTED-Works
-
-int solve_kenken(struct kenken *kenken);
-//Given an empty or partially completed grid and a list of constraints, solves the kenken for 
-//these conditions, or returns 0 if the initial conditions are not solvable or have multiple 
-//solutions. **UNWRITTEN
+//returns 1 if an element is removed, 0 otherwise
 
 int valid_partial_kenken(struct kenken kenken);
 //Return 1 if a kenken is correct so far, or 0 if there are no solutions for the given state. 
-//**UNTESTED
+//**TESTED --Works
 
 int valid_partial_grid(int arr[6][6]);
 //Return 1 if the grid has no invalid partial rows or columns **UNTESTED
@@ -116,6 +113,14 @@ int valid_partial_grid(int arr[6][6]);
 int valid_partial_constraint(struct constraint *ptr);
 //return 1 if all constraints have valid entries, 0 otherwise **UNTESTED
 //helper for valid_partial_kenken
+
+int copy_kenken(struct kenken *kkptr, struct kenken *newkkptr);
+//copies the contents of kkptr to newkkptr, returns 0 in event of malloc failure
+
+struct node_ctr *copy_constraints(struct kenken *kkptr);
+//copies the contents of kkptr to newkkptr, returns 0 in event of malloc failure
+
+int update_usr_kenken(struct kenken *usrkk);
 
 /******************************************
 
@@ -725,4 +730,71 @@ int list_length(struct node_square *dummy_ptr){
 				dummy_ptr = dummy_ptr->next_node;
 	}
 	return length;
+}
+
+int copy_kenken(struct kenken *kkptr, struct kenken *newkkptr){
+	for(int j = 0; j < 36; j++){
+		newkkptr->grid[j%6][j/6] = kkptr->grid[j%6][j/6];
+	}
+	newkkptr->ctrs = copy_constraints(kkptr);
+	return 0;
+}
+
+struct node_ctr *copy_constraints(struct kenken *kkptr){
+	struct node_ctr *local_ctrs_head = malloc(sizeof(struct node_ctr));
+	local_ctrs_head->constraint.op = kkptr->ctrs->constraint.op;
+	local_ctrs_head->constraint.result = kkptr->ctrs->constraint.result;
+	struct node_square *this_sqr = malloc(sizeof(struct node_square));
+	local_ctrs_head->constraint.numbers = this_sqr;
+	local_ctrs_head->constraint.numbers->pos[0] = kkptr->ctrs->constraint.numbers->pos[0];
+	local_ctrs_head->constraint.numbers->pos[1] = kkptr->ctrs->constraint.numbers->pos[1];
+	local_ctrs_head->constraint.numbers->entry = kkptr->ctrs->constraint.numbers->entry;
+	for(struct node_square *dmy2 = kkptr->ctrs->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+		if(dmy2->next_node != NULL){
+			struct node_square *nxt_sqr = malloc(sizeof(struct node_square));
+			nxt_sqr->pos[0] = dmy2->next_node->pos[0];
+			nxt_sqr->pos[1] = dmy2->next_node->pos[1];
+			nxt_sqr->entry = dmy2->next_node->entry;
+			this_sqr->next_node = nxt_sqr;
+			this_sqr = nxt_sqr;
+		}
+		else this_sqr->next_node = NULL;
+	}
+	struct node_ctr *dmyctrptr = local_ctrs_head;
+	for(struct node_ctr *dmy = kkptr->ctrs; dmy!=NULL; dmy = dmy->next_node){
+		if(dmy->next_node != NULL){
+			struct node_ctr *nxt_ele = malloc(sizeof(struct node_ctr));
+			nxt_ele->constraint.op = dmy->next_node->constraint.op;
+			nxt_ele->constraint.result = dmy->next_node->constraint.result;
+			this_sqr = malloc(sizeof(struct node_square));
+			nxt_ele->constraint.numbers = this_sqr;
+			nxt_ele->constraint.numbers->pos[0] = dmy->next_node->constraint.numbers->pos[0];
+			nxt_ele->constraint.numbers->pos[1] = dmy->next_node->constraint.numbers->pos[1];
+			nxt_ele->constraint.numbers->entry = dmy->next_node->constraint.numbers->entry;
+			for(struct node_square *dmy2 = dmy->next_node->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+				if(dmy2->next_node != NULL){
+					struct node_square *nxt_sqr = malloc(sizeof(struct node_square));
+					nxt_sqr->pos[0] = dmy2->next_node->pos[0];
+					nxt_sqr->pos[1] = dmy2->next_node->pos[1];
+					nxt_sqr->entry = dmy2->next_node->entry;
+					this_sqr->next_node = nxt_sqr;
+					this_sqr = nxt_sqr;
+				}
+				else this_sqr->next_node = NULL;
+			}
+			dmyctrptr->next_node = nxt_ele;
+			dmyctrptr = nxt_ele;
+		}
+		else dmyctrptr->next_node = NULL;
+	}
+	return local_ctrs_head;
+}
+
+int update_usr_kenken(struct kenken *usrkk){
+	for(struct node_ctr *dmy = usrkk->ctrs; dmy != 0; dmy = dmy->next_node){
+		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+			dmy2->entry = usrkk->grid[dmy2->pos[0]][dmy2->pos[1]];
+		}
+	}
+	return 0;
 }
