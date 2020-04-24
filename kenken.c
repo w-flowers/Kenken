@@ -1,800 +1,365 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<time.h>
-#define ADDOP 0
-#define MULTOP 1
-#define SUBOP 2
-#define DIVOP 3
-#define NOOP 4
+#include<GUI-kenken.h>
 
-
-// A program to take a 6x6 array of numbers and determine if the result is a valid Kenken **May have grown beyond its original scope to include generation**//
-
-//Linked list element for logical constraints 
-struct node_square {
-	int pos[2];				//position in kenken, valid values are 0-5, pos[0] must come from grid[*][], pos[1] from grid[][*]
-	int entry;				//number in said position, valid values are 1-6
-	struct node_square *next_node;	//next element
-};
-
-//A single constraint on the puzzle
-struct constraint{
-	int result;				//the result of the operation
-	int op;					//the operation: defined by preprocessor
-	struct node_square *numbers;	//the list of squares in the element
-};
-
-//Linked list of constraints
-struct node_ctr{
-	struct constraint constraint;
-	struct node_ctr *next_node;
-};
-
-//Usually created in Main, and then populated using r_fill_grid and generate_constraints
-struct kenken{
-	struct node_ctr *ctrs;
-	int grid[6][6];
-};
-
-int valid_grid(int[6][6]);
-//returns 1 if it is valid, 0 if not **TESTED -- WORKS
-
-int valid_constraint(struct constraint *);
-//returns 1 if valid, 0 if not **TESTED -- WORKS
-
-int kenken_valid(struct kenken *);
-//returns 1 if valid, 0 if not **TESTED IN MAIN USING r_fill_grid -- works in that case
-
-int list_length(struct node_square *);
-//gives the length of a linked list for node_square
-
-struct node_square create_numbers_list();
-//creates the initial node_square
-
-struct node_ctr create_ctr_list();
-//creates the initial node_ctr
-
-void r_fill_grid(int [6][6]);
-//randomly generates an underlying grid for a kenken, given a pointer to a blank array **TESTED -- WORKS
-
-int random_available(int[6]);
-//takes an array of available integers padded with 0's and returns one of those integers **TESTED -- WORKS
-
-int remove_available(int*, int);
-//removes a given number (1-6) from the list of available numbers for a square **TESTED -- WORKS
-//returns 1 if an element is removed, 0 otherwise
-
-int fill_square(int, int, int [6][6]);
-//fills squares of grid for generate function **TESTED -- WORKS
-
-int generate_kenken(struct kenken *);
-//generates the kenken structure using the generate_constraints and r_fill_grid functions
-//returns 0 in the event of a malloc failure ****TESTED-Works
-
-int destroy_kenken(struct kenken *);
-//Deallocates allocated memory in a of a generated kenken. **TESTED - WORKS
-
-int generate_constraints(struct kenken *);
-//generates the list of constraints for a puzzle, and maintains a list of unused squares
-//marks a square as unused by setting it to 6 in local array **TESTED-Works
-
-//NOTE: this function may require tweaking to generate good Kenkens to solve, however, the initial design goal is to create a working function
-
-struct node_square *random_square_walk(int, int [36][2], int [6][6]);
-//takes an integer length and a list of available cells, and uses this to randomly return a list
-//of available squares of this length, and then removes the given cells from the availability array
-//(by setting as 0) **TESTED-Works
-
-int create_constraint(int, struct node_square*, struct constraint *);
-//takes the operation and a pointer to a list of squares and populates the constraint,
-//returns 0 if a failure occurs, else 1 **TESTED-Works
-
-int r_assign_op(int, int, int);
-//Assigns an operation given the length of the list of nubmers of a constraint
-
-int (* random_available_sqr(int [36][2], int[2], int[4][2]))[2];
-//as above but for squares, and uses 6 as a dead value instead of 0
-//if second argument is [6][6], returns any random square, else returns one adjacent to argument if possible
-//returns 0 otherwise **TESTED-Works
-
-int remove_available_sqr(int [36][2], int[2]);
-//removes a given square i 0-5, j 0-5, from the list of available squares **TESTED-Works
-//returns 1 if an element is removed, 0 otherwise
-
-int valid_partial_kenken(struct kenken kenken);
-//Return 1 if a kenken is correct so far, or 0 if there are no solutions for the given state. 
-//**TESTED --Works
-
-int valid_partial_grid(int arr[6][6]);
-//Return 1 if the grid has no invalid partial rows or columns **UNTESTED
-//helper for valid_partial_kenken
-
-int valid_partial_constraint(struct constraint *ptr);
-//return 1 if all constraints have valid entries, 0 otherwise **UNTESTED
-//helper for valid_partial_kenken
-
-int copy_kenken(struct kenken *kkptr, struct kenken *newkkptr);
-//copies the contents of kkptr to newkkptr, returns 0 in event of malloc failure
-
-struct node_ctr *copy_constraints(struct kenken *kkptr);
-//copies the contents of kkptr to newkkptr, returns 0 in event of malloc failure
-
-int update_usr_kenken(struct kenken *usrkk);
-
-/******************************************
-
-Functions below
-
-*******************************************/
-
-                 
-int valid_constraint(struct constraint *ptr){
-	//check for valid value of operation
-	if((ptr->op) < 0 || (ptr->op) > 4) return 0;
-	//check result of addition
-	if(ptr->op == ADDOP){
-		if(list_length(ptr->numbers) <= 1) return 0;
-		int test_res = 0;
-		struct node_square *a_ptr;
-		for(a_ptr = ptr->numbers; a_ptr != NULL; a_ptr = a_ptr->next_node){
-			test_res += (a_ptr->entry);
-		}
-		if(test_res != ptr->result) return 0;
-	}
-	//check correct number of arguments for subtraction
-	if(ptr->op == SUBOP){
-		if(list_length(ptr->numbers) != 2) return 0;
-		int a = (ptr->numbers)->entry;
-		int b = ((ptr->numbers)->next_node)->entry;
-		if(a == b) return 0;
-		if(a > b){
-			if((a-b) != ptr->result) return 0;
-		}
-		if(b > a){
-			if((b-a) != ptr->result) return 0;
-		}
-	}
-	//check result of multiplication
-	if(ptr->op == MULTOP){
-		if(list_length(ptr->numbers) <= 1) return 0;
-		int test_res = 1;
-		struct node_square *a_ptr;
-		for(a_ptr = ptr->numbers; a_ptr != NULL; a_ptr = a_ptr->next_node){
-			test_res = test_res*(a_ptr->entry);
-		}
-		if(test_res != ptr->result) return 0;
-		
-	}
-	//check mod 0 and number of arguments for division
-	if(ptr->op == DIVOP){
-		if(list_length(ptr->numbers) != 2) return 0;
-		int a = (ptr->numbers)->entry;
-		int b = ((ptr->numbers)->next_node)->entry;
-		if(a == b || a <= 0 || b <= 0) return 0;
-		if(a > b){
-			if((a/b) != ptr->result || a%b != 0) return 0;
-		}
-		if(b > a){
-			if((b/a) != ptr->result || b%a != 0) return 0;
-		}
-	}
-	//check value of result given op
-	if(ptr->op == NOOP){
-		if(list_length(ptr->numbers) != 1){
-			printf("list too long\n");
-			return 0;
-		}
-		else if(ptr->result != (ptr->numbers)->entry){
-			//printf("unequal values\n");
-			return 0;
-		}
-		else return 1;
-	}
-	//check position of squares for adjacency to at least 1 other square
-	struct node_square *b_ptr;
-	for(b_ptr = ptr->numbers; b_ptr != NULL; b_ptr = b_ptr->next_node){
-		struct node_square *c_ptr;
-		int has_adj_sqrs = 0;
-		for(c_ptr = ptr->numbers; c_ptr != NULL; c_ptr = c_ptr->next_node){
-			if((abs((b_ptr->pos[0])-(c_ptr->pos[0]))+abs((b_ptr->pos[1])-(c_ptr->pos[1]))) == 1) has_adj_sqrs = 1; 
-		}
-		if(!has_adj_sqrs) return 0;
-	}
-	return 1;
-}
-
-
-
-int valid_grid(int arr[6][6]){
-	for(int cellcont = 1; cellcont < 7; cellcont++){
-		//check rows
-		for(int rownum = 0; rownum < 6; rownum++){
-			int num_num = 0;
-			for(int colnum = 0; colnum < 6; colnum++){
-				if(arr[rownum][colnum] == cellcont) num_num++;
+int main( int argc, char* args[] )
+{
+    //The window we'll be rendering to
+    SDL_Window* window = NULL;
+    
+    //The surface contained by the window
+    SDL_Surface* screenSurface = NULL;
+	
+	//SDL_Texture* texture = NULL;
+	
+	SDL_Renderer* renderer = NULL;
+	int t = (int) time(NULL);
+	printf("%d\n", t);
+	srand(t);
+    //Initialize SDL
+    if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+    {
+        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+    }
+    else
+    {
+        //Create window
+        window = SDL_CreateWindow("Kenny's Ken Ken Ken-undrum", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+        if( window == NULL )
+        {
+            printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        }
+        else
+        {
+			renderer = SDL_CreateRenderer(window, -1, 0);
+			if(TTF_Init()==-1) {
+    			printf("TTF_Init: %s\n", TTF_GetError());
+   		 		exit(2);
 			}
-			if(num_num != 1) return 0;
-		}
-		//check columns
-		for(int colnum = 0; colnum < 6; colnum++){
-			int num_num = 0;
-			for(int rownum = 0; rownum < 6; rownum++){
-				if(arr[rownum][colnum] == cellcont) num_num++;
+			
+			TTF_Font *font2;
+			font2 = TTF_OpenFont(TYPEFACE, BIG_FONT);
+			SDL_Rect texture_rect;
+			texture_rect.x = 0;  //the x coordinate
+			texture_rect.y = 0; // the y coordinate
+			texture_rect.w = SCREEN_WIDTH; //the width of the texture
+			texture_rect.h = SCREEN_HEIGHT; //the height of the texture	
+			
+			SDL_RenderSetScale(renderer, 1.0, 1.0);
+			
+			SDL_Point points[49];
+			
+			for(int i = 0; i < 49; i++){
+				points[i].x = MARGIN + SQR_SIZE*(i%7);
+				points[i].y = MARGIN + SQR_SIZE*(i/7);
 			}
-			if(num_num != 1) return 0;
-		}
-	}
-	return 1;
-}
-
-int kenken_valid(struct kenken *kenken_ptr){
-	if(!valid_grid(kenken_ptr->grid)) return 0;
-	for(struct node_ctr *d_ptr = kenken_ptr->ctrs; d_ptr != 0; d_ptr = d_ptr->next_node){
-		if(!valid_constraint(&(d_ptr->constraint))){
-			printf("Invalid constraint\n");
-			return 0;
-		}
-	}
-	//check each square occurs exactly once in constraint list,
-	//and that that square's entry matches the entry in the constraint
-	for(int i = 0; i < 6; i++){
-		for(int j = 0; j < 6; j++){
-			int n_sqr = 0; //no. of occurences of square
-			for(struct node_ctr *d2_ptr = kenken_ptr->ctrs; d2_ptr != 0; d2_ptr = d2_ptr->next_node){
-				//walk through constraint list
-				for(struct node_square *d1_ptr = (d2_ptr->constraint).numbers; d1_ptr != NULL; d1_ptr = d1_ptr->next_node){ //walk through constraint numbers
-					if(d1_ptr->pos[0] == i && d1_ptr->pos[1] == j){
-						if(d1_ptr->entry != kenken_ptr->grid[i][j]){
-							 printf("Wrong element at square\n");
-							 return 0;
-						 }
-						else n_sqr++;
-					}
+			
+			//Squares for the game
+			SDL_Rect rects[36];
+			
+			for(int i = 0; i < 36; i++){
+				rects[i].x = MARGIN + SQR_SIZE*(i%6)+1;
+				rects[i].y = MARGIN + SQR_SIZE*(i/6)+1;
+				rects[i].w = SQR_SIZE-1;
+				rects[i].h = SQR_SIZE-1;
+			}
+			
+			//Box for displaying the status of the kenken
+			/*SDL_Rect check_kk_btn;
+			
+			check_kk_btn.x = MARGIN + SQR_SIZE*7+3;
+			check_kk_btn.y = MARGIN;
+			check_kk_btn.w = 5*SQR_SIZE/2;
+			check_kk_btn.h = SQR_SIZE;
+			
+			SDL_Point checkbtn_cnrs[5];
+			checkbtn_cnrs[0].x = check_kk_btn.x-1;
+			checkbtn_cnrs[0].y = check_kk_btn.y-1;
+			checkbtn_cnrs[1].x = check_kk_btn.x+check_kk_btn.w;
+			checkbtn_cnrs[1].y = check_kk_btn.y-1;
+			checkbtn_cnrs[2].x = check_kk_btn.x+check_kk_btn.w;
+			checkbtn_cnrs[2].y = check_kk_btn.y+check_kk_btn.h;
+			checkbtn_cnrs[3].x = check_kk_btn.x-1;
+			checkbtn_cnrs[3].y = check_kk_btn.y+check_kk_btn.h;
+			checkbtn_cnrs[4].x = checkbtn_cnrs[0].x;
+			checkbtn_cnrs[4].y = checkbtn_cnrs[0].y;
+			*/
+			
+			struct button_w_border check_kk_btn;
+			create_button_w_border(&check_kk_btn, MARGIN + SQR_SIZE*7+3, MARGIN, 5*SQR_SIZE/2, SQR_SIZE);
+			SDL_Texture *chkbtntxt = NULL;
+			int chkbtntxtdims[2];
+			char *chkbtn = "Check Progress";
+			draw_button_text(renderer, &chkbtntxt, chkbtntxtdims, chkbtn);
+			
+			struct button_w_border showkkstatus;
+			create_button_w_border(&showkkstatus, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*2, 5*SQR_SIZE/2, SQR_SIZE);
+			SDL_Texture *skkstatmsg1 = NULL;
+			int statmsgdims1[2];
+			char *msg1 = "On Track";
+			draw_button_text(renderer, &skkstatmsg1, statmsgdims1, msg1);
+			SDL_Texture *skkstatmsg2 = NULL;
+			int statmsgdims2[2];
+			char *msg2 = "Invalid Entry";
+			draw_button_text(renderer, &skkstatmsg2, statmsgdims2, msg2);
+			SDL_Texture *skkstatmsg3 = NULL;
+			int statmsgdims3[2];
+			char *msg3 = "You Solved It!";
+			draw_button_text(renderer, &skkstatmsg3, statmsgdims3, msg3);
+			
+			struct button_w_border showkksolution;
+			create_button_w_border(&showkksolution, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*4, 5*SQR_SIZE/2, SQR_SIZE);
+			SDL_Texture *skksoltxt = NULL;
+			int skkstxtdims[2];
+			char *skksol = "Show Solution";
+			draw_button_text(renderer, &skksoltxt, skkstxtdims, skksol);
+			
+			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
+			
+			for(int i = 0; i < 36; i++){
+				corner_numbers[i].x = MARGIN + SQR_SIZE*(i%6)+1;
+				corner_numbers[i].y = MARGIN + SQR_SIZE*(i/6)+1;
+				corner_numbers[i].w = 1;
+				corner_numbers[i].h = 1;
+			}
+			
+			//textures for the corner numbers
+			SDL_Texture *textrects[36];
+			for(int i = 0; i < 36; i++) textrects[i] = NULL;
+			
+			//textures for user entered numbers
+			SDL_Texture *num_texts[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+			
+			//array containing num_texts dimensions
+			int txtboxdim[6][2];
+			
+			draw_central_number_textures(renderer, num_texts, txtboxdim);
+			
+			struct kenken game;
+			
+			generate_kenken(&game);
+			struct kenken dmygame;
+			copy_kenken(&game, &dmygame);
+			
+			for(int i = 0; i < 6; i++){
+				for(int j = 0; j < 6; j++){
+					game.grid[i][j] = 0;
 				}
 			}
-			if(n_sqr != 1) {
-				printf("wrong number of squares\n");
-				return 0;
+			update_usr_kenken(&game);
+			while(solve_kenken(&game) != 1){
+				destroy_kenken(&game);
+				generate_kenken(&game);
+				copy_kenken(&game, &dmygame);
+				for(int i = 0; i < 6; i++){
+					for(int j = 0; j < 6; j++){
+						game.grid[i][j] = 0;
+					}
+				}
+				update_usr_kenken(&game);
 			}
-		}
-		
-	}
-	return 1;
-}
+			copy_kenken(&dmygame, &game);
+			destroy_kenken(&dmygame);
+			
+			int vertedge[5][6];
+			
+			int horiedge[6][5];
+			
+			for(int i = 0; i < 6; i++){
+				for(int j = 0; j < 5; j++){
+					vertedge[j][i] = 1;
+					horiedge[i][j] = 1;
+				}
+			}
+			
+			struct node_ctrdraw *tlhead = NULL; //list of topleft squares of the constraints
+			
+			for(struct node_ctr *dmy = game.ctrs; dmy != NULL; dmy = dmy->next_node){
+				struct node_ctrdraw *element = malloc(sizeof(struct node_ctrdraw));
+				element->next_node = tlhead;
+				element->result = dmy->constraint.result;
+				element->op = dmy->constraint.op;
+				element->topleft[0] = 5;
+				element->topleft[1] = 5;
+				
+				for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+					if(element->topleft[0] > dmy2->pos[0]){
+						element->topleft[0] = dmy2->pos[0];
+						element->topleft[1] = dmy2->pos[1];
+					}
+					else if(element->topleft[0] == dmy2->pos[0] && element->topleft[1] > dmy2->pos[1]){
+						element->topleft[1] = dmy2->pos[1];
+					}
+				}
+				
+				tlhead = element;
+			}
+			
+			
+			struct kenken usrkk;
+			copy_kenken(&game, &usrkk);
+			
+			for(int i = 0; i < 6; i++){
+				for(int j = 0; j < 6; j++){
+					usrkk.grid[i][j] = 0;
+				}
+			}
+			
+			update_usr_kenken(&usrkk);
+			
+			draw_corner_number_textures(renderer, tlhead, textrects, corner_numbers);
+			
+			set_kenken_boundaries(vertedge, horiedge, &game);
+			
+			SDL_Point corners[5] = {points[0], points[6], points[48], points[42], points[0]};
+			
+			//SDL_RenderCopy(renderer, texture, NULL, &texture_rect);
+			//SDL_SetRenderTarget(renderer, texture);
 
-void r_fill_grid(int grid[6][6]){
-	fill_square(0, 0, grid);
-}
+            //Exit event
+		    SDL_Event e;
+			
+		    int quit = 0;
+			
+			SDL_Rect *selected_sqr = &rects[0];
+			
+			int selected_index = 0;
+			
+			int check_msg_status = NONE;
+			
+			//SDL_RenderPresent(renderer);
+			
+			while(!quit)
+		    {
+                 SDL_WaitEvent( &e );
+		         
+		         if( e.type == SDL_QUIT )
+		         {
+		                  quit = 1;
+						  break;
+		         }
+				 if( e.type == SDL_MOUSEBUTTONUP ){
+				 	for(int i = 0; i < 36; i++){
+				 		if( e.button.x > rects[i].x && e.button.x < rects[i].x + rects[i].w && e.button.y > rects[i].y && e.button.y < rects[i].y + rects[i].h){
+				 			
+							if((*selected_sqr).x == rects[i].x && (*selected_sqr).y == rects[i].y) break;
+							
+							//SDL_SetRenderDrawColor(renderer, 210, 210, 250, SDL_ALPHA_OPAQUE);
+							
+							selected_sqr = &rects[i];
+							
+							selected_index = i;
 
-int random_available(int available[6]){ //picks a random number from a list, padded by 0's at the end
-	int i = 0;
-	for(int *k = &available[0]; *k != 0 && k < &available[6]; k++) i++;
-	if(i == 1) return available[0];
-	if(i == 0) return 0;
-	int index = rand() % (i);
-	return available[index];
-}
-
-int remove_available(int* available, int number){
-	if(number < 1 || number > 6) return 0;
-	int i = 0;
-	while(*(available+i) != number && i < 6) i++;
-	if(i == 6) return 0; //not in array
-	for(int j = i; j < 5; j++) *(available + j) = *(available + j + 1);
-	*(available+5) = 0;
-	return 1; //success
-}
-
-int fill_square(int i, int j, int arr[6][6]){
-	int available[6] = {1,2,3,4,5,6};
-	for(int k = 0; k < j; k++){ //eliminates any numbers already in the row 
-		int sqr = arr[i][k];
-		remove_available(available, sqr);
-	}
-	for(int k = 0; k < i; k++){ //eliminates any numbers already in the column
-		int sqr = arr[k][j];
-		remove_available(available, sqr);
-	}
-	while(available[0] != 0){ //randomly select a number which hasn't been taken
-		arr[i][j] = random_available(available);
-		if(i == 5 && j == 5){
-			return 1;
-		}
-		if(fill_square((i+(j+1)/6),(j+1)%6,arr) == 0){ 
-			//checks if the next square successfully returns, and if it doesn't, removes its 
-			//selection and picks another number
-			remove_available(available, arr[i][j]);
-		}
-		else{
-			return 1;
-		}
-	}
-	return 0;
-}
-
-int generate_kenken(struct kenken *kenkenptr){
-	//srand(time(NULL));
-	r_fill_grid(kenkenptr->grid);
-	//printf("Filled the grid\n");
-	int x = generate_constraints(kenkenptr);
-	//printf("generated the constraints\n");
-	return x;
-}
-
-int destroy_kenken(struct kenken *kenkenptr){
-	//walk through constraints
-	for(struct node_ctr *dmy_ptr = kenkenptr->ctrs; dmy_ptr != NULL;){
-		//walk through node_square s, freeing them
-		for(struct node_square *dmysqrptr = dmy_ptr->constraint.numbers; dmysqrptr != NULL;){
-			struct node_square *dltsqrptr = dmysqrptr;
-			dmysqrptr = dmysqrptr->next_node;
-			free(dltsqrptr);
-		}
-		//free constraint, then next constraint
-		struct node_ctr *dltctrptr = dmy_ptr;
-		dmy_ptr = dmy_ptr->next_node;
-		free(dltctrptr);
-	}
-	return 1;
-}
-
-int generate_constraints(struct kenken *kenkenptr){
-	//printf("entered gc\n");
-	int available[36][2];
-	for(int i = 0; i < 36; i++){ //creates list of avaiable squares for a constraint
-		available[i][0] = i/6;
-		available[i][1] = i%6;
-	}
-	struct node_ctr *dummy_ptr;
-	
-	//creates constraint of 4 squares
-	struct node_square *list = random_square_walk(4, available, kenkenptr->grid);
-	if(list != NULL){
-		struct node_ctr *fst_ele = (struct node_ctr *)malloc(sizeof(struct node_ctr));
-		if(fst_ele == NULL) return 0;
-		create_constraint(r_assign_op(4, 4, 5), list, (&(fst_ele->constraint)));
-		fst_ele->next_node = NULL;
-		dummy_ptr = fst_ele;
-	}
-	
-	//creates up to 2 constraints of 3 squares (this can fail)
-	int counter = 0;
-	while(counter < 3){
-		list = random_square_walk(3, available, kenkenptr->grid);
-		if(list != NULL){
-			struct node_ctr *next_ele = (struct node_ctr *)malloc(sizeof(struct node_ctr));
-			if(next_ele == NULL) return 0;
-			create_constraint(r_assign_op(3, 4, 5), list, &(next_ele->constraint));
-			next_ele->next_node = dummy_ptr;
-			dummy_ptr = next_ele;
-			//printf("3 square, head, %p, tail\n", dummy_ptr);
-		}
-		counter++;
-	}
-	
-	//creates up to 15 constraints of length 2 (this can create less due to random failure)
-	counter = 0;
-	while(counter < 15){
-		list = random_square_walk(2, available, kenkenptr->grid);
-		if(list != NULL){
-			struct node_ctr *next_ele = (struct node_ctr *)malloc(sizeof(struct node_ctr));
-			if(next_ele == NULL) return 0;
-			create_constraint(r_assign_op(2, list->entry, list->next_node->entry), list, &(next_ele->constraint));
-			next_ele->next_node = dummy_ptr;
-			dummy_ptr = next_ele;
-		}
-		counter++;
-	}
-	
-	//populate remaining squares with singleton cages
-	while(1){
-		list = random_square_walk(1, available, kenkenptr->grid);
-		if(list != NULL){
-			struct node_ctr *next_ele = (struct node_ctr *)malloc(sizeof(struct node_ctr));
-			if(next_ele == NULL) return 0;
-			create_constraint(r_assign_op(1, 4, 5), list, &(next_ele->constraint));
-			next_ele->next_node = dummy_ptr;
-			dummy_ptr = next_ele;
-			//if(available[0][0] == 6 || available[0][1] == 6) break;
-		}
-		if(available[0][0] == 6 || available[0][1] == 6) break;
-	}
-	
-	
-	kenkenptr->ctrs = dummy_ptr;
-	
-	return 1;
-}
-
-struct node_square *random_square_walk(int length, int arr[36][2], int kenken[6][6]){
-	//printf("entered random squarewalk\n");
-	struct node_square *head;
-	int dmy_arr[36][2];
-	for(int i = 0; i < 36; i++){
-		for(int j = 0; j < 2; j++){
-			dmy_arr[i][j] = arr[i][j];
-		}
-	} //used to reset available list in the event that the function call fails
-	
-	for(int l = 0; l < length; l++){ 
-		struct node_square *sqr_ptr = (struct node_square *)malloc(sizeof(struct node_square));
-		if(sqr_ptr == NULL){
-			printf("malloc failure\n");//dynamically allocated -  must be freed manually later when the kenken is destroyed
-			return NULL;
-		}
-		int arr2[4][2];
-		if(l == 0){ //randomly selects first square of the walk
-			int dmy[2] = {6, 6};
-			int (*sqr)[2] = random_available_sqr(arr, dmy, arr2);
-			if(sqr == NULL) { //if random avaiable fails - reset function
-				free(sqr_ptr);
+				 		}
+				 	}
+					if( e.button.x > check_kk_btn.btn.x && e.button.x < check_kk_btn.btn.x + check_kk_btn.btn.w && e.button.y > check_kk_btn.btn.y && e.button.y < check_kk_btn.btn.y + check_kk_btn.btn.h){
+						if(valid_partial_kenken(usrkk)){
+							if(kenken_valid(&usrkk)) check_msg_status = CORRECT;
+							else{
+								struct kenken dmykenken;
+								copy_kenken(&usrkk, &dmykenken);
+								if(solve_kenken(&dmykenken) == 1) check_msg_status = PARTCORRECT;
+								else check_msg_status = INCORRECT;
+								destroy_kenken(&dmykenken);
+							}
+						}
+						else check_msg_status = INCORRECT;
+					}
+					if(e.button.x > showkksolution.btn.x && e.button.x < showkksolution.btn.x + showkksolution.btn.w && e.button.y > showkksolution.btn.y && e.button.y < showkksolution.btn.y + showkksolution.btn.h){
+						copy_kenken(&game, &usrkk);
+					}
+				}
+				if( e.type == SDL_KEYDOWN){
+					switch(e.key.keysym.sym){
+						case SDLK_UP:
+						if(selected_index > 5){
+							selected_index = selected_index - 6;
+							selected_sqr = &rects[selected_index];
+						}
+						break;
+						case SDLK_DOWN:
+						if(selected_index < 30){
+							selected_index = selected_index + 6;
+							selected_sqr = &rects[selected_index];
+						}
+						break;
+						case SDLK_LEFT:
+						if(selected_index % 6 != 0){
+							selected_index = selected_index - 1;
+							selected_sqr = &rects[selected_index];
+						}
+						break;
+						case SDLK_RIGHT:
+						if(selected_index % 6 != 5){
+							selected_index = selected_index + 1;
+							selected_sqr = &rects[selected_index];
+						}
+						break;
+						case SDLK_BACKSPACE:
+						usrkk.grid[selected_index%6][selected_index/6] = 0;
+						break;
+						case SDLK_1:
+						usrkk.grid[selected_index%6][selected_index/6] = 1;
+						break;
+						case SDLK_2:
+						usrkk.grid[selected_index%6][selected_index/6] = 2;
+						break;
+						case SDLK_3:
+						usrkk.grid[selected_index%6][selected_index/6] = 3;
+						break;
+						case SDLK_4:
+						usrkk.grid[selected_index%6][selected_index/6] = 4;
+						break;
+						case SDLK_5:
+						usrkk.grid[selected_index%6][selected_index/6] = 5;
+						break;
+						case SDLK_6:
+						usrkk.grid[selected_index%6][selected_index/6] = 6;
+						break;
+					}
+					
+					update_usr_kenken(&usrkk);
+				
+				}
+				
+				draw_function(window, renderer, &texture_rect, corners, points, rects, selected_sqr, vertedge, horiedge);
+				
 				for(int i = 0; i < 36; i++){
-					for(int j = 0; j < 2; j++){
-						arr[i][j] = dmy_arr[i][j];
+					if(textrects[i] != NULL){
+						SDL_RenderCopy(renderer, textrects[i], NULL, &corner_numbers[i]);
 					}
 				}
-				return NULL;
-			}
-			
-			//creates last element of list of squares
-			sqr_ptr->pos[0] = (*sqr)[0];
-			sqr_ptr->pos[1] = (*sqr)[1];
-			sqr_ptr->entry = kenken[(*sqr)[0]][(*sqr)[1]];
-			sqr_ptr->next_node = NULL;
-			head = sqr_ptr;
-			remove_available_sqr(arr, *sqr);
-		}
-		
-		
-		else{ //randomly selects from adjacent squares
-			int (*sqr)[2] = random_available_sqr(arr, head->pos, arr2);
-			struct node_square *dummy_ptr = head->next_node;
-			
-			//walks through existing squares, finds one adjacent to the one stored by dummy_ptr
-			while(sqr == NULL && dummy_ptr != NULL){
-				sqr = random_available_sqr(arr, dummy_ptr->pos, arr2);
-				dummy_ptr = dummy_ptr->next_node;
-			}
-			//if no adjacent squares available
-			if(sqr == NULL){
-				free(sqr_ptr);
-				for(int i = 0; i < 36; i++){
-					for(int j = 0; j < 2; j++){
-						arr[i][j] = dmy_arr[i][j];
-					}
+				
+				if(check_msg_status == CORRECT) draw_button(renderer, skkstatmsg3, &showkkstatus, statmsgdims3);
+				else if(check_msg_status == PARTCORRECT) draw_button(renderer, skkstatmsg1, &showkkstatus, statmsgdims1);
+				else if(check_msg_status == INCORRECT) draw_button(renderer, skkstatmsg2, &showkkstatus, statmsgdims2);
+				
+				draw_button(renderer, skksoltxt, &showkksolution, skkstxtdims);
+				draw_button(renderer, chkbtntxt, &check_kk_btn, chkbtntxtdims);
+				
+				draw_central_numbers(renderer, num_texts, rects, txtboxdim, usrkk.grid);
+				
+				/*if(valid_partial_kenken(usrkk)){
+					SDL_SetRenderDrawColor(renderer, 10, 210, 10, SDL_ALPHA_OPAQUE);
 				}
-				for(struct node_square *dlt_ptr = head; dlt_ptr != NULL; ){
-					struct node_square *dummy_ptr = dlt_ptr;
-					dlt_ptr = dlt_ptr->next_node;
-					free(dummy_ptr);
-				}
-				return NULL;
-			}
-			
-			//prepends square to list
-			else{
-				sqr_ptr->pos[0] = (*sqr)[0];
-				sqr_ptr->pos[1] = (*sqr)[1];
-				sqr_ptr->entry = kenken[(*sqr)[0]][(*sqr)[1]];
-				sqr_ptr->next_node = head;
-				head = sqr_ptr;
-				remove_available_sqr(arr, *sqr);
-			}
-		}
-		
-	}
+				else{
+					SDL_SetRenderDrawColor(renderer, 210, 10, 10, SDL_ALPHA_OPAQUE);
+				}*/
+				
+				SDL_RenderPresent(renderer);
+		    }
+        }
+    }
+	//Destroy renderer
+	SDL_DestroyRenderer(renderer);
 	
-	return head;
-}
-
-int create_constraint(int oper, struct node_square *ctr_sqrs, struct constraint *ctr){
-	//THIS FUNCTION DOES NOT HANDLE LOGIC, AND ASSUMES IT RECEIVES LISTS OF THE CORRECT LENGTHS AND CORRESPONDING OPERATIONS
+	//TTF_CloseFont(font2);
 	
-	//printf("entered create_constraint\n");
-	ctr->op = oper;
-	ctr->numbers = ctr_sqrs;
-	if(oper == ADDOP){		//add
-		int test_res = 0;
-		struct node_square *a_ptr;
-		for(a_ptr = ctr_sqrs; a_ptr != NULL; a_ptr = a_ptr->next_node){
-			test_res += (a_ptr->entry);
-		}
-		ctr->result = test_res;
-	}
-	if(oper == SUBOP){		//sub
-		int a = ctr->numbers->entry;
-		int b = (ctr->numbers->next_node)->entry;
-		if(a == b) return 0; //This should never occur
-		if(a > b){
-			ctr->result = (a-b);
-		}
-		if(b > a){
-			ctr->result = (b-a);
-		}
-	}
-	if(oper == MULTOP){		//mult
-		int test_res = 1;
-		struct node_square *a_ptr;
-		for(a_ptr = ctr_sqrs; a_ptr != NULL; a_ptr = a_ptr->next_node){
-			test_res = test_res*(a_ptr->entry);
-		}
-		ctr->result = test_res;
-		
-	}
-	if(oper == DIVOP){		//div NOTE: Must check in the fucntion controlling logic that the two numbers yield a mod of 0
-		int a = (ctr->numbers)->entry;
-		int b = ((ctr->numbers)->next_node)->entry;
-		if(a == b) return 0; //This should never occur
-		if(a > b){
-			ctr->result = a/b;
-		}
-		if(b > a){
-			ctr->result = b/a;
-		}
-	}
-	//no op
-	if(oper == NOOP){
-		ctr->result = ctr->numbers->entry;
-	}
-	if(oper > 4 || oper < 0) return 0;
-	return 1;
-}
-
-int r_assign_op(int length, int arg1, int arg2){
-	//printf("entered random assignop\n");
-	//srand(time(NULL));
-	if(length == 1) return NOOP;
-	if(length == 2 && (arg1 % arg2 == 0 || arg2 % arg1 == 0)) return rand() % 4; //assumes a 2 square cannot have two of the same number
-	else if(length == 2) return rand() % 3;
-	else return rand() % 2; //returns ADDOP or MULTOP
-}
-
-int (*random_available_sqr(int available[36][2], int sqr[2], int arr[4][2]))[2]{
+	TTF_Quit();
 	
-	if(sqr[0] == 6 || sqr[1] == 6){ //randomly selects any square from the list available
-		int i = 0;
-		for(int k = 0; available[k][0] != 6 && available[k][1] != 6 && k < 36; k++) i++;
-		if(i==0) return NULL;
-		if(i == 1) return &available[0];
-		int index = rand() % (i);
-		return &available[index];
-	}
-	int jctr;
-	jctr = 0;
+    //Destroy window
+    SDL_DestroyWindow( window );
 	
-	//this populates the list of adjacent squares in the event that an initial square is passed to the function
-	for(int k = 0; available[k][0] != 6 && available[k][1] != 6 && k < 36; k++){
-		if((available[k][0] == sqr[0] && available[k][1] == (sqr[1]+1)) || (available[k][0] == sqr[0] && available[k][1] == (sqr[1]-1)) || (available[k][0] == (sqr[0]+1) && available[k][1] == sqr[1]) || (available[k][0] == (sqr[0]-1) && available[k][1] == sqr[1])){
-			//the above checks if an adjacent square is available
-			arr[jctr][0] = available[k][0];
-			arr[jctr][1] = available[k][1];
-			jctr++;
-		}
-	}
-	
-	if(jctr == 0){
-		//printf("no available squares\n");
-		return NULL;
-	}
-	
-	else{
-		//populates end of array with NIL values (6)
-		for(int l = jctr; l < 4; l++){
-			arr[l][0] = 6;
-			arr[l][1] = 6;
-		}
-		//randomly selects from the list of available adjacent squares
-		if(jctr == 1) return &arr[0];
-		int index = rand() % (jctr);
-		return &arr[index];
-	}
-}
+    //Quit SDL subsystems
+    SDL_Quit();
 
-int remove_available_sqr(int available[36][2], int sqr[2]){
-	//check for valid input
-	for(int k = 0; k < 2; k++) if(sqr[k] < 0 || sqr[k] > 5) return 0;
-	
-	int i = 0;
-	//searches for element to remove
-	while(available[i][0] != 6 && available[i][1] != 6 && !(available[i][0] == sqr[0] && available[i][1] == sqr[1]) && i < 36){
-		i++;
-	}
-	if(available[i][0] == 6 || available[i][1] == 6 || i == 36) {
-		return 0; //not in array
-	}
-	for(int j = i; j < 35; j++){ //deletes element to be removed, pads array with 6's
-		available[j][0] = available[j+1][0];
-		available[j][1] = available[j+1][1];
-	}
-	available[35][0] = 6;
-	available[35][1] = 6;
-	return 1; //success
-}
-
-int valid_partial_kenken(struct kenken kenken){
-	if(!valid_partial_grid(kenken.grid)) return 0;
-	for(struct node_ctr *d_ptr = kenken.ctrs; d_ptr != 0; d_ptr = d_ptr->next_node){
-		if(!valid_partial_constraint(&(d_ptr->constraint))){
-			//printf("Invalid constraint\n");
-			return 0;
-		}
-	}
-	return 1;
-}
-
-int valid_partial_grid(int arr[6][6]){
-	for(int cellcont = 1; cellcont < 7; cellcont++){
-		//check rows
-		for(int rownum = 0; rownum < 6; rownum++){
-			int num_num = 0;
-			for(int colnum = 0; colnum < 6; colnum++){
-				if(arr[rownum][colnum] == cellcont) num_num++;
-			}
-			if(num_num > 1) return 0;
-		}
-		//check columns
-		for(int colnum = 0; colnum < 6; colnum++){
-			int num_num = 0;
-			for(int rownum = 0; rownum < 6; rownum++){
-				if(arr[rownum][colnum] == cellcont) num_num++;
-			}
-			if(num_num > 1) return 0;
-		}
-	}
-	return 1;
-}
-
-//testing github                
-int valid_partial_constraint(struct constraint *ptr){
-	//check for valid value of operation
-	if((ptr->op) < 0 || (ptr->op) > 4) return 0;
-	//check result of addition
-	if(ptr->op == ADDOP){
-		if(list_length(ptr->numbers) <= 1) return 0;
-		int test_res = 0;
-		int zero_eles = 0;
-		struct node_square *a_ptr;
-		for(a_ptr = ptr->numbers; a_ptr != NULL; a_ptr = a_ptr->next_node){
-			test_res += (a_ptr->entry);
-			if(a_ptr->entry == 0) zero_eles++;
-		}
-		if(zero_eles == 0 && test_res != ptr->result) return 0;
-		if(zero_eles > 0 && (test_res > ptr->result - zero_eles || test_res < ptr->result - 6*zero_eles)) return 0;
-	}
-	//check correct number of arguments for subtraction
-	if(ptr->op == SUBOP){
-		if(list_length(ptr->numbers) != 2) return 0;
-		int a = (ptr->numbers)->entry;
-		int b = ((ptr->numbers)->next_node)->entry;
-		if(a == b && a != 0) return 0;
-		if(a > b){
-			if((a-b) != ptr->result && b != 0) return 0;
-		}
-		if(b > a){
-			if((b-a) != ptr->result && a != 0) return 0;
-		}
-	}
-	//check result of multiplication
-	if(ptr->op == MULTOP){
-		if(list_length(ptr->numbers) <= 1) return 0;
-		int test_res = 1;
-		int zero_eles = 0;
-		struct node_square *a_ptr;
-		for(a_ptr = ptr->numbers; a_ptr != NULL; a_ptr = a_ptr->next_node){
-			if(a_ptr->entry != 0) test_res = test_res*(a_ptr->entry);
-			else zero_eles++;
-		}
-		if(zero_eles == 0 && test_res != ptr->result) return 0;
-		else if(zero_eles < list_length(ptr->numbers) && ptr->result % test_res != 0) return 0;
-	}
-	//check mod 0 and number of arguments for division
-	if(ptr->op == DIVOP){
-		if(list_length(ptr->numbers) != 2) return 0;
-		int a = (ptr->numbers)->entry;
-		int b = ((ptr->numbers)->next_node)->entry;
-		if(a == b && b != 0) return 0;
-		if(a > b && b != 0){
-			if((a/b) != ptr->result || a%b != 0) return 0;
-		}
-		if(b > a && a != 0){
-			if((b/a) != ptr->result || b%a != 0) return 0;
-		}
-		if(a == 0 && b != 0){
-			if(ptr->result * b > 6 && b % ptr->result != 0) return 0;
-		}
-		if(b == 0 && a != 0){
-			if(ptr->result * a > 6 && a % ptr->result != 0) return 0;
-		}
-	}
-	//check value of result given op
-	if(ptr->op == NOOP){
-		if(list_length(ptr->numbers) != 1){
-			//printf("list too long\n");
-			return 0;
-		}
-		else if((ptr->result != (ptr->numbers)->entry) && ((ptr->numbers)->entry != 0)){
-			//printf("unequal values\n");
-			return 0;
-		}
-		else return 1;
-	}
-	return 1;
-}
-
-
-int list_length(struct node_square *dummy_ptr){
-	int length = 0;
-	while(dummy_ptr!=NULL){
-				length++;
-				dummy_ptr = dummy_ptr->next_node;
-	}
-	return length;
-}
-
-int copy_kenken(struct kenken *kkptr, struct kenken *newkkptr){
-	for(int j = 0; j < 36; j++){
-		newkkptr->grid[j%6][j/6] = kkptr->grid[j%6][j/6];
-	}
-	newkkptr->ctrs = copy_constraints(kkptr);
-	return 0;
-}
-
-struct node_ctr *copy_constraints(struct kenken *kkptr){
-	struct node_ctr *local_ctrs_head = malloc(sizeof(struct node_ctr));
-	local_ctrs_head->constraint.op = kkptr->ctrs->constraint.op;
-	local_ctrs_head->constraint.result = kkptr->ctrs->constraint.result;
-	struct node_square *this_sqr = malloc(sizeof(struct node_square));
-	local_ctrs_head->constraint.numbers = this_sqr;
-	local_ctrs_head->constraint.numbers->pos[0] = kkptr->ctrs->constraint.numbers->pos[0];
-	local_ctrs_head->constraint.numbers->pos[1] = kkptr->ctrs->constraint.numbers->pos[1];
-	local_ctrs_head->constraint.numbers->entry = kkptr->ctrs->constraint.numbers->entry;
-	for(struct node_square *dmy2 = kkptr->ctrs->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-		if(dmy2->next_node != NULL){
-			struct node_square *nxt_sqr = malloc(sizeof(struct node_square));
-			nxt_sqr->pos[0] = dmy2->next_node->pos[0];
-			nxt_sqr->pos[1] = dmy2->next_node->pos[1];
-			nxt_sqr->entry = dmy2->next_node->entry;
-			this_sqr->next_node = nxt_sqr;
-			this_sqr = nxt_sqr;
-		}
-		else this_sqr->next_node = NULL;
-	}
-	struct node_ctr *dmyctrptr = local_ctrs_head;
-	for(struct node_ctr *dmy = kkptr->ctrs; dmy!=NULL; dmy = dmy->next_node){
-		if(dmy->next_node != NULL){
-			struct node_ctr *nxt_ele = malloc(sizeof(struct node_ctr));
-			nxt_ele->constraint.op = dmy->next_node->constraint.op;
-			nxt_ele->constraint.result = dmy->next_node->constraint.result;
-			this_sqr = malloc(sizeof(struct node_square));
-			nxt_ele->constraint.numbers = this_sqr;
-			nxt_ele->constraint.numbers->pos[0] = dmy->next_node->constraint.numbers->pos[0];
-			nxt_ele->constraint.numbers->pos[1] = dmy->next_node->constraint.numbers->pos[1];
-			nxt_ele->constraint.numbers->entry = dmy->next_node->constraint.numbers->entry;
-			for(struct node_square *dmy2 = dmy->next_node->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-				if(dmy2->next_node != NULL){
-					struct node_square *nxt_sqr = malloc(sizeof(struct node_square));
-					nxt_sqr->pos[0] = dmy2->next_node->pos[0];
-					nxt_sqr->pos[1] = dmy2->next_node->pos[1];
-					nxt_sqr->entry = dmy2->next_node->entry;
-					this_sqr->next_node = nxt_sqr;
-					this_sqr = nxt_sqr;
-				}
-				else this_sqr->next_node = NULL;
-			}
-			dmyctrptr->next_node = nxt_ele;
-			dmyctrptr = nxt_ele;
-		}
-		else dmyctrptr->next_node = NULL;
-	}
-	return local_ctrs_head;
-}
-
-int update_usr_kenken(struct kenken *usrkk){
-	for(struct node_ctr *dmy = usrkk->ctrs; dmy != 0; dmy = dmy->next_node){
-		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-			dmy2->entry = usrkk->grid[dmy2->pos[0]][dmy2->pos[1]];
-		}
-	}
-	return 0;
+    return 0;
 }
