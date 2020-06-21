@@ -53,12 +53,6 @@ int kenken_valid(struct kenken *);
 int list_length(struct node_square *);
 //gives the length of a linked list for node_square
 
-struct node_square create_numbers_list();
-//creates the initial node_square
-
-struct node_ctr create_ctr_list();
-//creates the initial node_ctr
-
 void r_fill_grid(int [6][6]);
 //randomly generates an underlying grid for a kenken, given a pointer to a blank array **TESTED -- WORKS
 

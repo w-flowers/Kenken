@@ -4,15 +4,12 @@ int main( int argc, char* args[] )
 {
     //The window we'll be rendering to
     SDL_Window* window = NULL;
-    
-    //The surface contained by the window
-    SDL_Surface* screenSurface = NULL;
 	
 	//SDL_Texture* texture = NULL;
 	
 	SDL_Renderer* renderer = NULL;
 	int t = (int) time(NULL);
-	printf("%d\n", t);
+	//printf("%d\n", t);
 	srand(t);
     //Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -84,14 +81,14 @@ int main( int argc, char* args[] )
 			*/
 			
 			struct button_w_border check_kk_btn;
-			create_button_w_border(&check_kk_btn, MARGIN + SQR_SIZE*7+3, MARGIN, 5*SQR_SIZE/2, SQR_SIZE);
+			create_button_w_border(&check_kk_btn, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE, 5*SQR_SIZE/2, SQR_SIZE);
 			SDL_Texture *chkbtntxt = NULL;
 			int chkbtntxtdims[2];
 			char *chkbtn = "Check Progress";
 			draw_button_text(renderer, &chkbtntxt, chkbtntxtdims, chkbtn);
 			
 			struct button_w_border showkkstatus;
-			create_button_w_border(&showkkstatus, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*2, 5*SQR_SIZE/2, SQR_SIZE);
+			create_button_w_border(&showkkstatus, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*3, 5*SQR_SIZE/2, SQR_SIZE);
 			SDL_Texture *skkstatmsg1 = NULL;
 			int statmsgdims1[2];
 			char *msg1 = "On Track";
@@ -104,13 +101,31 @@ int main( int argc, char* args[] )
 			int statmsgdims3[2];
 			char *msg3 = "You Solved It!";
 			draw_button_text(renderer, &skkstatmsg3, statmsgdims3, msg3);
+			SDL_Texture *skkstatmsg4 = NULL;
+			int statmsgdims4[2];
+			char *msg4 = " ";
+			draw_button_text(renderer, &skkstatmsg4, statmsgdims4, msg4);
 			
 			struct button_w_border showkksolution;
-			create_button_w_border(&showkksolution, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*4, 5*SQR_SIZE/2, SQR_SIZE);
+			create_button_w_border(&showkksolution, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*5, 5*SQR_SIZE/2, SQR_SIZE);
 			SDL_Texture *skksoltxt = NULL;
 			int skkstxtdims[2];
 			char *skksol = "Show Solution";
 			draw_button_text(renderer, &skksoltxt, skkstxtdims, skksol);
+			
+			struct button_w_border quitkk;
+			create_button_w_border(&quitkk, MARGIN + SQR_SIZE*7+3, MARGIN + SQR_SIZE*7, 5*SQR_SIZE/2, SQR_SIZE);
+			SDL_Texture *quitkktxt = NULL;
+			int quitkktxtdims[2];
+			char *qkkt = "Quit Kenken";
+			draw_button_text(renderer, &quitkktxt, quitkktxtdims, qkkt);
+			
+			struct button_w_border newkk;
+			create_button_w_border(&newkk, MARGIN + SQR_SIZE*7/2, MARGIN + SQR_SIZE*7, 5*SQR_SIZE/2, SQR_SIZE);
+			SDL_Texture *newkktxt = NULL;
+			int newkktxtdims[2];
+			char *nkkt = "New Kenken";
+			draw_button_text(renderer, &newkktxt, newkktxtdims, nkkt);
 			
 			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
 			
@@ -172,27 +187,7 @@ int main( int argc, char* args[] )
 			
 			struct node_ctrdraw *tlhead = NULL; //list of topleft squares of the constraints
 			
-			for(struct node_ctr *dmy = game.ctrs; dmy != NULL; dmy = dmy->next_node){
-				struct node_ctrdraw *element = malloc(sizeof(struct node_ctrdraw));
-				element->next_node = tlhead;
-				element->result = dmy->constraint.result;
-				element->op = dmy->constraint.op;
-				element->topleft[0] = 5;
-				element->topleft[1] = 5;
-				
-				for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
-					if(element->topleft[0] > dmy2->pos[0]){
-						element->topleft[0] = dmy2->pos[0];
-						element->topleft[1] = dmy2->pos[1];
-					}
-					else if(element->topleft[0] == dmy2->pos[0] && element->topleft[1] > dmy2->pos[1]){
-						element->topleft[1] = dmy2->pos[1];
-					}
-				}
-				
-				tlhead = element;
-			}
-			
+			create_cnr_nums_list(&tlhead, game);
 			
 			struct kenken usrkk;
 			copy_kenken(&game, &usrkk);
@@ -266,6 +261,58 @@ int main( int argc, char* args[] )
 					if(e.button.x > showkksolution.btn.x && e.button.x < showkksolution.btn.x + showkksolution.btn.w && e.button.y > showkksolution.btn.y && e.button.y < showkksolution.btn.y + showkksolution.btn.h){
 						copy_kenken(&game, &usrkk);
 					}
+					if(e.button.x > quitkk.btn.x && e.button.x < quitkk.btn.x + quitkk.btn.w && e.button.y > quitkk.btn.y && e.button.y < quitkk.btn.y + quitkk.btn.h){
+	                  quit = 1;
+					  break;
+					}
+					if(e.button.x > newkk.btn.x && e.button.x < newkk.btn.x + newkk.btn.w && e.button.y > newkk.btn.y && e.button.y < newkk.btn.y + newkk.btn.h){
+						free_corner_number_textures(&tlhead);
+						for(int i = 0; i < 36; i++) textrects[i] = NULL;
+						destroy_kenken(&game);
+						destroy_kenken(&usrkk);
+						generate_kenken(&game);
+						copy_kenken(&game, &dmygame);
+						for(int i = 0; i < 6; i++){
+							for(int j = 0; j < 6; j++){
+								game.grid[i][j] = 0;
+							}
+						}
+						update_usr_kenken(&game);
+						while(solve_kenken(&game) != 1){
+							destroy_kenken(&game);
+							generate_kenken(&game);
+							copy_kenken(&game, &dmygame);
+							for(int i = 0; i < 6; i++){
+								for(int j = 0; j < 6; j++){
+									game.grid[i][j] = 0;
+								}
+							}
+							update_usr_kenken(&game);
+						}
+						copy_kenken(&dmygame, &game);
+						destroy_kenken(&dmygame);
+						for(int i = 0; i < 6; i++){
+							for(int j = 0; j < 5; j++){
+								vertedge[j][i] = 1;
+								horiedge[i][j] = 1;
+							}
+						}
+						destroy_corner_number_textures(textrects);
+						
+						create_cnr_nums_list(&tlhead, game);
+						
+						copy_kenken(&game, &usrkk);
+			
+						for(int i = 0; i < 6; i++){
+							for(int j = 0; j < 6; j++){
+								usrkk.grid[i][j] = 0;
+							}
+						}
+						update_usr_kenken(&usrkk);
+						draw_corner_number_textures(renderer, tlhead, textrects, corner_numbers);
+						set_kenken_boundaries(vertedge, horiedge, &game);
+						check_msg_status = NONE;
+					}
 				}
 				if( e.type == SDL_KEYDOWN){
 					switch(e.key.keysym.sym){
@@ -331,9 +378,12 @@ int main( int argc, char* args[] )
 				if(check_msg_status == CORRECT) draw_button(renderer, skkstatmsg3, &showkkstatus, statmsgdims3);
 				else if(check_msg_status == PARTCORRECT) draw_button(renderer, skkstatmsg1, &showkkstatus, statmsgdims1);
 				else if(check_msg_status == INCORRECT) draw_button(renderer, skkstatmsg2, &showkkstatus, statmsgdims2);
+				else  draw_button(renderer, skkstatmsg4, &showkkstatus, statmsgdims4);
 				
 				draw_button(renderer, skksoltxt, &showkksolution, skkstxtdims);
 				draw_button(renderer, chkbtntxt, &check_kk_btn, chkbtntxtdims);
+				draw_button(renderer, quitkktxt, &quitkk, quitkktxtdims);
+				draw_button(renderer, newkktxt, &newkk, newkktxtdims);
 				
 				draw_central_numbers(renderer, num_texts, rects, txtboxdim, usrkk.grid);
 				
@@ -346,18 +396,21 @@ int main( int argc, char* args[] )
 				
 				SDL_RenderPresent(renderer);
 		    }
+			TTF_Quit();
+			//Destroy renderer
+			SDL_DestroyRenderer(renderer);
+			destroy_corner_number_textures(textrects);
+			destroy_central_number_textures(num_texts);
+			destroy_button_text(&skksoltxt);
+			destroy_button_text(&chkbtntxt);
+			destroy_button_text(&quitkktxt);
+			destroy_button_text(&newkktxt);
+			free_corner_number_textures(&tlhead);
         }
+	    //Destroy window
+	    SDL_DestroyWindow( window );
     }
-	//Destroy renderer
-	SDL_DestroyRenderer(renderer);
-	
-	//TTF_CloseFont(font2);
-	
-	TTF_Quit();
-	
-    //Destroy window
-    SDL_DestroyWindow( window );
-	
+		
     //Quit SDL subsystems
     SDL_Quit();
 
@@ -411,6 +464,30 @@ int draw_function(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect *text_rec
 	return 0;
 }
 
+int create_cnr_nums_list(struct node_ctrdraw **tlhead, struct kenken game){
+	for(struct node_ctr *dmy = game.ctrs; dmy != NULL; dmy = dmy->next_node){
+		struct node_ctrdraw *element = malloc(sizeof(struct node_ctrdraw));
+		element->next_node = *tlhead;
+		element->result = dmy->constraint.result;
+		element->op = dmy->constraint.op;
+		element->topleft[0] = 5;
+		element->topleft[1] = 5;
+		
+		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2 != NULL; dmy2 = dmy2->next_node){
+			if(element->topleft[0] > dmy2->pos[0]){
+				element->topleft[0] = dmy2->pos[0];
+				element->topleft[1] = dmy2->pos[1];
+			}
+			else if(element->topleft[0] == dmy2->pos[0] && element->topleft[1] > dmy2->pos[1]){
+				element->topleft[1] = dmy2->pos[1];
+			}
+		}
+		
+		*tlhead = element;
+	}
+	return 0;
+}
+
 int draw_corner_number_textures(SDL_Renderer *renderer, struct node_ctrdraw *tlhead, SDL_Texture *textrects[36], SDL_Rect corner_numbers[36]){
 	//Set font/size/other key features
 	SDL_Color colour = {0, 0, 0};
@@ -445,6 +522,26 @@ int draw_corner_number_textures(SDL_Renderer *renderer, struct node_ctrdraw *tlh
 	return 0;
 }
 
+int destroy_corner_number_textures(SDL_Texture *textrects[36]){
+	for(int i = 0; i != 36; i++){
+		if(textrects[i] != NULL){
+			SDL_DestroyTexture(textrects[i]);
+			textrects[i] = NULL;
+		}
+	}
+	return 0;
+}
+
+int free_corner_number_textures(struct node_ctrdraw **tlhead){
+	for(struct node_ctrdraw *dmy = *tlhead; dmy != NULL;){
+		struct node_ctrdraw *dlt = dmy;
+		dmy = dmy->next_node;
+		free(dlt);
+	}
+	*tlhead = NULL;
+	return 0;
+}
+
 int draw_central_number_textures(SDL_Renderer *renderer, SDL_Texture *num_texts[6], int txtboxdims[6][2]){
 	//Set font/size/other key features
 	SDL_Color colour = {0, 0, 0};
@@ -464,6 +561,17 @@ int draw_central_number_textures(SDL_Renderer *renderer, SDL_Texture *num_texts[
 	TTF_CloseFont(font);
 	return 0;
 }
+
+int destroy_central_number_textures(SDL_Texture *num_texts[6]){
+	for(int i = 0; i != 6; i++){
+		if(num_texts[i] != NULL){
+			SDL_DestroyTexture(num_texts[i]);
+			num_texts[i] = NULL;
+		}
+	}
+	return 0;
+}
+
 
 int draw_central_numbers(SDL_Renderer *renderer, SDL_Texture *num_texts[6], SDL_Rect rects[36], int txtboxdims[6][2], int usrgrid[6][6]){
 	for(int i = 0; i < 6; i++){
@@ -527,6 +635,14 @@ int draw_button_text(SDL_Renderer *renderer, SDL_Texture **text_texture, int txt
 	txtbox_dims[1] = textsurf->h;
 	SDL_FreeSurface(textsurf);
 	TTF_CloseFont(font);
+	return 0;
+}
+
+int destroy_button_text(SDL_Texture **text_texture){
+	if(*text_texture){
+		SDL_DestroyTexture(*text_texture);
+		*text_texture = NULL;
+	}
 	return 0;
 }
 
