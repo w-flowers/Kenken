@@ -35,19 +35,32 @@ int reduce_by_hiddenpairs(struct pzlsqr psqrs[6][6]);
 
 int nzero_length(int arr[6]);
 
-int recursive_helper_f_mult(struct dbl_node_sqr *dmynxt, struct dbl_node_sqr *dmyprv, struct pzlsqr psqrs[6][6], int test_res, int result);
+int recursive_helper_f_mult(struct dbl_node_sqr *dmynxt, struct dbl_node_sqr *dmyprv, 
+	
+	struct pzlsqr psqrs[6][6], int test_res, int result);
+	
 
-int recursive_helper_f_add(struct dbl_node_sqr *dmynxt, struct dbl_node_sqr *dmyprv, struct pzlsqr psqrs[6][6], int test_res);
-
-//attempt at a brute force solver, after preliminary trimming **NEEDS MAJOR REWORK -- deprecated
-int brute_fill_grid(int hori_ind, int vert_ind, struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], int init_sol[6][6]);
+int recursive_helper_f_add(struct dbl_node_sqr *dmynxt, struct dbl_node_sqr *dmyprv, 
+	
+	struct pzlsqr psqrs[6][6], int test_res);
+	
 
 
 //major rework of brute fill grid **TESTED -- WORKS
-int brute_fill_grid_2(struct node_ctr *curr_cst, struct node_square *curr_sqr, struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], int init_sol[6][6], struct node_ctr *init_csts);
+int brute_fill_grid_2(struct node_ctr *curr_cst, struct node_square *curr_sqr, 
+	
+	struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], int init_sol[6][6], 
+	
+	struct node_ctr *init_csts);
+
 
 //helper for brute fill grid 2
-int bfg2_has_mult_sol(struct node_ctr *curr_cst, struct node_square *curr_sqr, struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], struct pzlsqr dmypsqrs[6][6], int init_sol[6][6], struct node_ctr *init_csts);
+int bfg2_has_mult_sol(struct node_ctr *curr_cst, struct node_square *curr_sqr, 
+
+	struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], struct pzlsqr dmypsqrs[6][6], 
+	
+	int init_sol[6][6], struct node_ctr *init_csts);
+
 
 //returns 1 if psqrs == init_sol, otherwise 0
 int eq_init_sol(struct pzlsqr psqrs[6][6], int init_sol[6][6]);
