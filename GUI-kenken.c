@@ -279,7 +279,7 @@ int main( int argc, char* args[] )
 						
 						if( valid_partial_kenken( usrkk ) ){
 							
-							if(kenken_valid( &usrkk ) ) check_msg_status = CORRECT;
+							if( !kenken_invalid( &usrkk ) ) check_msg_status = CORRECT;
 							
 							else{
 								

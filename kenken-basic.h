@@ -47,8 +47,8 @@ int valid_grid( int[6][6] );
 int valid_constraint( struct constraint * );
 //returns 1 if valid, 0 if not **TESTED -- WORKS
 
-int kenken_valid( struct kenken * );
-//returns 1 if valid, 0 if not **TESTED IN MAIN USING r_fill_grid -- works in that case
+int kenken_invalid( struct kenken * );
+//returns 0 if valid, non-zero if not **TESTED IN MAIN USING r_fill_grid -- works in that case
 
 int list_length( struct node_square * );
 //gives the length of a linked list for node_square

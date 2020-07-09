@@ -187,7 +187,7 @@ int valid_grid( int arr[6][6] ){
 }
 
 
-int kenken_valid( struct kenken *kenken_ptr ){
+int kenken_invalid( struct kenken *kenken_ptr ){
 	
 	if( !valid_grid( kenken_ptr->grid ) ) return 0;
 	
