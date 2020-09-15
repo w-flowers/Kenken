@@ -41,3 +41,14 @@ Features:
 -- A simple savegame functionality which can take users kenken and save it as a text file
 -- A load function has been written which parses the text file, and if it is a valid kenken, populates a kenken pointer with the data from said file
 -- Still needs some work to allow the user to use these functions to save a game from the program
+
+- Screenshots:
+
+![start of game](res/img1.png)
+
+![img2](res/img2.png)
+
+![img3](res/img3.png)
+
+![img4](res/img4.png)
+
