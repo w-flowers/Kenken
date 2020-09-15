@@ -18,35 +18,49 @@ c: //start the constraints
 /c //end the constraints
 */
 
+int save_grid( int grid[6][6] , FILE *kkfile );
+
+int save_constraints( struct node_ctr *ctrs, FILE *kkfile );
+
+int read_grid_helper ( int target[6][6], FILE *kkfile );
+
+int read_constraints( struct kenken *kkptr, FILE *kkfile );
+
 //saves a kenken to a file in the format listed above
-int save_kenken(struct kenken *kkptr, char* filename){
+int save_kenken(struct kenken *kkptr, int usrgrid[6][6], char* filename){
+	
 	char filepath[50];
+	
 	int filenmlen = strlen(filename);
+	
 	snprintf(filepath, 20 + filenmlen, "savegames/%s.kenken", filename);
+	
 	FILE *kkfile = fopen(filepath, "w");
+	
 	if(kkfile == NULL) return 1;
+	
 	setbuf(kkfile, NULL);
 	
 	fprintf(kkfile, "g:\n");
 	
-	for(int j = 0; j<6; j++){
-		fprintf(kkfile, "[");
-		for(int i = 0; i<6; i++){
-			fprintf(kkfile, "%d,", (kkptr->grid)[i][j]);
-		}
-		fprintf(kkfile, "]\n");
-	}
+	save_grid( kkptr->grid, kkfile );
+	
 	fprintf(kkfile, "/g\n");
+	
 	fprintf(kkfile, "c:\n");
-	for(struct node_ctr *dmy = kkptr->ctrs; dmy != NULL; dmy = dmy->next_node){
-		fprintf(kkfile, "{r%d,o%d,", dmy->constraint.result, dmy->constraint.op);
-		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2!=NULL; dmy2 = dmy2->next_node){
-			fprintf(kkfile, "(x%d,y%d,e%d,)", dmy2->pos[0], dmy2->pos[1], dmy2->entry);
-		}
-		fprintf(kkfile, "}\n");
-	}
+	
+	save_constraints( kkptr->ctrs, kkfile );
+	
 	fprintf(kkfile, "/c\n");
+	
+	fprintf(kkfile, "u:\n");
+	
+	save_grid( usrgrid, kkfile );
+	
+	fprintf(kkfile, "/u\n");
+	
 	fclose(kkfile);
+	
 	return 0;
 }
 
@@ -202,98 +216,98 @@ int load_kenken(struct kenken *kkptr, char* filename){
 								break;
 							}
 							case '(':{
-							struct node_square *new_num = malloc(sizeof(struct node_square));
-							new_num->next_node = new_ctr->constraint.numbers;
-							new_ctr->constraint.numbers = new_num;
-							int num_vals_filled[3] = {0, 0, 0};
-							no_sqrs++;
-							while(buffer[bufind] != ')' && buffer[bufind] && bufind < max){
-								bufind++;
-								switch(buffer[bufind]){
-									case 'x':{
-										char intbuf[20];
-										int ibind = 0;
-										bufind++;
-										while(isdigit(buffer[bufind]) && bufind < max && ibind < 20){
-											intbuf[ibind] = buffer[bufind];
+								struct node_square *new_num = malloc(sizeof(struct node_square));
+								new_num->next_node = new_ctr->constraint.numbers;
+								new_ctr->constraint.numbers = new_num;
+								int num_vals_filled[3] = {0, 0, 0};
+								no_sqrs++;
+								while(buffer[bufind] != ')' && buffer[bufind] && bufind < max){
+									bufind++;
+									switch(buffer[bufind]){
+										case 'x':{
+											char intbuf[20];
+											int ibind = 0;
 											bufind++;
-											ibind++;
+											while(isdigit(buffer[bufind]) && bufind < max && ibind < 20){
+												intbuf[ibind] = buffer[bufind];
+												bufind++;
+												ibind++;
+											}
+											intbuf[ibind] = '\0';
+											int cur_num = 0;
+											if(intbuf[0] != '\0'){
+												cur_num = (int) strtol(intbuf, NULL, 10);
+												new_num->pos[0] = cur_num;
+												num_vals_filled[0]++;
+											}
+											else{
+												errind = 1;
+												printf("Err9\n");
+												goto ERR_ROUTINE;
+											}
+											break;
 										}
-										intbuf[ibind] = '\0';
-										int cur_num = 0;
-										if(intbuf[0] != '\0'){
-											cur_num = (int) strtol(intbuf, NULL, 10);
-											new_num->pos[0] = cur_num;
-											num_vals_filled[0]++;
-										}
-										else{
-											errind = 1;
-											printf("Err9\n");
-											goto ERR_ROUTINE;
-										}
-										break;
-									}
 									
-									case 'y':{
-										char intbuf[20];
-										int ibind = 0;
-										bufind++;
-										while(isdigit(buffer[bufind]) && bufind < max && ibind < 20){
-											intbuf[ibind] = buffer[bufind];
+										case 'y':{
+											char intbuf[20];
+											int ibind = 0;
 											bufind++;
-											ibind++;
+											while(isdigit(buffer[bufind]) && bufind < max && ibind < 20){
+												intbuf[ibind] = buffer[bufind];
+												bufind++;
+												ibind++;
+											}
+											intbuf[ibind] = '\0';
+											int cur_num = 0;
+											if(intbuf[0] != '\0'){
+												cur_num = (int) strtol(intbuf, NULL, 10);
+												new_num->pos[1] = cur_num;
+												num_vals_filled[1]++;
+											}
+											else{
+												errind = 1;
+												printf("Err10\n");
+												goto ERR_ROUTINE;
+											}
+											break;
 										}
-										intbuf[ibind] = '\0';
-										int cur_num = 0;
-										if(intbuf[0] != '\0'){
-											cur_num = (int) strtol(intbuf, NULL, 10);
-											new_num->pos[1] = cur_num;
-											num_vals_filled[1]++;
-										}
-										else{
-											errind = 1;
-											printf("Err10\n");
-											goto ERR_ROUTINE;
-										}
-										break;
-									}
 									
-									case 'e':{
-										char intbuf[20];
-										int ibind = 0;
-										bufind++;
-										while(isdigit(buffer[bufind]) && bufind < max && ibind < 20){
-											intbuf[ibind] = buffer[bufind];
+										case 'e':{
+											char intbuf[20];
+											int ibind = 0;
 											bufind++;
-											ibind++;
+											while(isdigit(buffer[bufind]) && bufind < max && ibind < 20){
+												intbuf[ibind] = buffer[bufind];
+												bufind++;
+												ibind++;
+											}
+											intbuf[ibind] = '\0';
+											int cur_num = 0;
+											if(intbuf[0] != '\0'){
+												cur_num = (int) strtol(intbuf, NULL, 10);
+												new_num->entry = cur_num;
+												num_vals_filled[2]++;
+											}
+											else{
+												errind = 1;
+												printf("Err11\n");
+												goto ERR_ROUTINE;
+											}
+											break;
 										}
-										intbuf[ibind] = '\0';
-										int cur_num = 0;
-										if(intbuf[0] != '\0'){
-											cur_num = (int) strtol(intbuf, NULL, 10);
-											new_num->entry = cur_num;
-											num_vals_filled[2]++;
-										}
-										else{
-											errind = 1;
-											printf("Err11\n");
-											goto ERR_ROUTINE;
-										}
-										break;
-									}
 									
+									}
 								}
-							}
-							for(int i = 0; i < 3; i++){
-								if(num_vals_filled[i] != 1){
-									errind = 1;
-									printf("Err12:i%d,num_vals_filled[i] %d\n", i, num_vals_filled[i]);
-									goto ERR_ROUTINE;
+								for(int i = 0; i < 3; i++){
+									if(num_vals_filled[i] != 1){
+										errind = 1;
+										printf("Err12:i%d,num_vals_filled[i] %d\n", i, num_vals_filled[i]);
+										goto ERR_ROUTINE;
+									}
 								}
+								if(new_num->pos[0] > -1 && new_num->pos[0] < 6 && new_num->pos[1] > -1 && new_num->pos[1] < 6)each_sqr[new_num->pos[0]][new_num->pos[1]]++;
+								break;
 							}
-							if(new_num->pos[0] > -1 && new_num->pos[0] < 6 && new_num->pos[1] > -1 && new_num->pos[1] < 6)each_sqr[new_num->pos[0]][new_num->pos[1]]++;
-							break;
-						}
 						}
 					}
 					for(int i = 0; i < 2; i++){
@@ -315,4 +329,42 @@ int load_kenken(struct kenken *kkptr, char* filename){
 	}
 	fclose(kkfile);
 	return 0;
+}
+
+//Only to be called in save_kenken
+int save_grid( int grid[6][6] , FILE *kkfile ){
+	
+	for(int j = 0; j<6; j++){
+		fprintf(kkfile, "[");
+		for(int i = 0; i<6; i++){
+			fprintf(kkfile, "%d,", grid[i][j]);
+		}
+		fprintf(kkfile, "]\n");
+	}
+	
+	
+	return 0;
+	
+}
+
+//Only to be called in save_kenken
+int save_constraints( struct node_ctr *ctrs, FILE *kkfile ){
+	
+	
+	for(struct node_ctr *dmy = ctrs; dmy != NULL; dmy = dmy->next_node){
+		
+		fprintf(kkfile, "{r%d,o%d,", dmy->constraint.result, dmy->constraint.op);
+		
+		for(struct node_square *dmy2 = dmy->constraint.numbers; dmy2!=NULL; dmy2 = dmy2->next_node){
+			
+			fprintf(kkfile, "(x%d,y%d,e%d,)", dmy2->pos[0], dmy2->pos[1], dmy2->entry);
+			
+		}
+		
+		fprintf(kkfile, "}\n");
+		
+	}
+	
+	return 0;
+	
 }

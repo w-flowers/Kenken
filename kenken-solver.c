@@ -173,7 +173,7 @@ int solve_kenken( struct kenken *kkptr ){
 
 		int testint1 = reduce_by_grid( psqrs, sqrnumnd );
 		
-		if( testint1 == -1 ) printf( "reduced grid too far\n" );
+		if( testint1 == -1 ) /*printf( "reduced grid too far\n" )*/;
 		
 		nodiff += testint1;
 		
@@ -182,7 +182,7 @@ int solve_kenken( struct kenken *kkptr ){
 			
 			int testint2 = reduce_constraint_arrays_2( &( dmy->constraint ), psqrs );
 			
-			if( testint2 == -1 ) printf( "reduced constraints too far\n" );
+			if( testint2 == -1 ) /*printf( "reduced constraints too far\n" )*/;
 			
 			nodiff += testint2;
 			

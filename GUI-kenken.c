@@ -127,6 +127,11 @@ int main( int argc, char* args[] )
 			draw_button_text(renderer, &newkktxt, newkktxtdims, nkkt);
 			
 			
+			//Button that saves the current kenken
+			struct button_w_border savekk;
+			create_button_w_border(&savekk, MARGIN, MARGIN + SQR_SIZE*7, 5*SQR_SIZE/2, SQR_SIZE);
+			
+			
 			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
 			
 			for(int i = 0; i < 36; i++){

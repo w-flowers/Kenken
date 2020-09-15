@@ -189,14 +189,14 @@ int valid_grid( int arr[6][6] ){
 
 int kenken_invalid( struct kenken *kenken_ptr ){
 	
-	if( !valid_grid( kenken_ptr->grid ) ) return 0;
+	if( !valid_grid( kenken_ptr->grid ) ) return 1;
 	
 	for( struct node_ctr *d_ptr = kenken_ptr->ctrs; d_ptr != 0; d_ptr = d_ptr->next_node ){
 		
 		if( !valid_constraint( &( d_ptr->constraint ) ) ){
 			
 			//printf( "Invalid constraint\n" );
-			return 1;
+			return 2;
 			
 		}
 		
@@ -222,7 +222,7 @@ int kenken_invalid( struct kenken *kenken_ptr ){
 						if( d1_ptr->entry != kenken_ptr->grid[i][j] ){
 							
 							 //printf( "Wrong element at square\n" );
-							 return 2;
+							 return 3;
 							 
 						 }
 						 
@@ -237,7 +237,7 @@ int kenken_invalid( struct kenken *kenken_ptr ){
 			if( n_sqr != 1 ) {
 				
 				//printf( "wrong number of squares\n" );
-				return 3;
+				return 4;
 				
 			}
 			

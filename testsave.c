@@ -2,9 +2,11 @@
 #include <stdio.h>
 
 int main(){
-	/*struct kenken kkptr;
+	struct kenken kkptr;
 	generate_kenken(&kkptr);
-	save_kenken(&kkptr, "name");*/
+	int usrgrid[6][6];
+	for(int i = 0; i < 36; i++) usrgrid[i/6][i%6] = 0;
+	save_kenken(&kkptr, usrgrid, "name");
 	struct kenken kenken2;
 	int test = load_kenken(&kenken2, "name");
 	//int test = kenken_valid(&kenken2);

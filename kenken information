@@ -94,6 +94,14 @@ GUI Design:
 - Add a box to display solution
 - Add a box to give a new puzzle
 
+Saving Games:
+- Add a start menu
+-- Simple list - New Game, Load Game, Quit Game
+-- New game should start event loop
+-- Load Game should load a game from a save file and continue on
+- Use the load game and save game functions to implement saving
+-- Save game needs to save a kenken, made from the usrgrid and the constraint list
+-- Load game should load a kenken to a new kenken
 
 
 
