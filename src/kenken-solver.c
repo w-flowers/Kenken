@@ -1,4 +1,4 @@
-#include"kenken-solver.h"
+#include "../inc/kenken-solver.h"
 
 int solve_kenken( struct kenken *kkptr ){
 	

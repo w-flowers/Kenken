@@ -1,4 +1,4 @@
-#include "kenken-solver.c"
+#include "../inc/kenken-solver.h"
 
 int main(){
 	//printf("Main entered");

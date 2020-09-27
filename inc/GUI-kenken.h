@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include"kenken-solver.h"
+#include "kenken-solver.h"
 
 #define NONE 0
 #define INCORRECT 1

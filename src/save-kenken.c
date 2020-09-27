@@ -2,8 +2,8 @@
 #include<stdio.h>
 #include<ctype.h>
 #include<stdlib.h>
-#include"kenken-basic.h"
-#include "kenken-basic.c"
+#include "../inc/kenken-basic.h"
+#include "../inc/kenken-basic.c"
 
 const int max = 200;
 const int KKSIZE = 6;

@@ -1,4 +1,4 @@
-#include"GUI-kenken.h"
+#include "../inc/GUI-kenken.h"
 
 int main( int argc, char* args[] )
 {
