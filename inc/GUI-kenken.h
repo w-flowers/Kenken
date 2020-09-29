@@ -2,7 +2,7 @@
 #define GUIKENKEN_H_
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL2_ttf/SDL_ttf.h>
 #include "kenken-solver.h"
 
 #define NONE 0
