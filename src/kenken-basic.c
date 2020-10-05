@@ -379,6 +379,8 @@ int destroy_kenken( struct kenken *kenkenptr ){
 		free( dltctrptr );
 		
 	}
+    
+    kenkenptr->ctrs = NULL;
 	
 	return 1;
 	

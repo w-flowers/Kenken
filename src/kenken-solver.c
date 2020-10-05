@@ -39,7 +39,7 @@ int solve_kenken( struct kenken *kkptr ){
 		
 	}
 	
-	//create local constraints and copy contents of kkptr to them
+	//create local constraints and copy contents of kkptr to them LOCALCTRSHEAD
 	struct node_ctr *local_ctrs_head = malloc( sizeof( struct node_ctr ) );
 	
 	local_ctrs_head->constraint.op = kkptr->ctrs->constraint.op;
@@ -530,7 +530,9 @@ int reduce_constraint_arrays_2( struct constraint *ctr, struct pzlsqr psqrs[6][6
 		
 		ctr->numbers->entry = psqrs[head->pos[0]][head->pos[1]].solved;
 		
-		return 1;
+		change_count = 1;
+        
+        goto cleanup;
 	
 	}
 	
@@ -693,7 +695,7 @@ int reduce_constraint_arrays_2( struct constraint *ctr, struct pzlsqr psqrs[6][6
 		}
 	}
 	
-	
+cleanup:	
 	for( struct dbl_node_sqr *dmy = head; dmy!=NULL; ){
 		
 		struct dbl_node_sqr *dltdsqrptr = dmy;

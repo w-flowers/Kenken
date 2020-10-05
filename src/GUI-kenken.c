@@ -130,6 +130,11 @@ int main( int argc, char* args[] )
 			//Button that saves the current kenken
 			struct button_w_border savekk;
 			create_button_w_border(&savekk, MARGIN, MARGIN + SQR_SIZE*7, 5*SQR_SIZE/2, SQR_SIZE);
+            
+			SDL_Texture *savekktxt = NULL;
+			int savekktxtdims[2];
+			char *skkt = "Save Kenken";
+			draw_button_text(renderer, &savekktxt, savekktxtdims, skkt);
 			
 			
 			SDL_Rect corner_numbers[36]; //rect for displaying puzzle clues
@@ -176,6 +181,8 @@ int main( int argc, char* args[] )
 				destroy_kenken( &game );
 				
 				generate_kenken( &game );
+                
+                destroy_kenken( &dmygame );
 				
 				copy_kenken( &game, &dmygame );
 				
@@ -188,6 +195,8 @@ int main( int argc, char* args[] )
 				update_usr_kenken( &game );
 			}
 			
+            destroy_kenken( &game );
+            
 			copy_kenken( &dmygame, &game );
 			destroy_kenken( &dmygame );
 			
@@ -356,6 +365,9 @@ int main( int argc, char* args[] )
 							destroy_kenken( &game );
 							
 							generate_kenken( &game );
+                            
+                            destroy_kenken( &dmygame );
+                            
 							copy_kenken( &game, &dmygame );
 							for(int i = 0; i < 6; i++){
 								for(int j = 0; j < 6; j++){
@@ -367,7 +379,10 @@ int main( int argc, char* args[] )
 							
 						}
 						
+                        destroy_kenken( &game );
+                        
 						copy_kenken( &dmygame, &game );
+                        
 						destroy_kenken( &dmygame );
 						
 						for(int i = 0; i < 6; i++){
@@ -511,6 +526,7 @@ int main( int argc, char* args[] )
 				draw_button( renderer, chkbtntxt, &check_kk_btn, chkbtntxtdims );
 				draw_button( renderer, quitkktxt, &quitkk, quitkktxtdims );
 				draw_button( renderer, newkktxt, &newkk, newkktxtdims );
+                draw_button( renderer, savekktxt, &savekk, savekktxtdims );
 				
 				draw_central_numbers( renderer, num_texts, rects, txtboxdim, usrkk.grid );
 				
@@ -530,6 +546,7 @@ int main( int argc, char* args[] )
 			destroy_button_text( &chkbtntxt );
 			destroy_button_text( &quitkktxt );
 			destroy_button_text( &newkktxt );
+            destroy_button_text( &savekktxt );
 			
 			free_corner_number_textures( &tlhead );
 			
