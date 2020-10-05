@@ -2,7 +2,7 @@
 .SUFFIXES:
 CC		= gcc
 CFLAGS	= -Wall -Wextra -Wpedantic
-LDLIBS	= -lSDL2_ttf -lSDL2  
+LDLIBS	= -lSDL2_ttf -lSDL2  `sdl2-config --cflags --libs`
 
 all: kenken
 kenken: GUI-kenken.o kenken-solver.o kenken-basic.o
