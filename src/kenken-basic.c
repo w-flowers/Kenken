@@ -279,7 +279,7 @@ int remove_available( int available[6], int number ){
 	
 	int i = 0;
 	
-	while( available[i] != number && i < 6 ) i++;
+	while( i < 6 && available[i] != number ) i++;
 	
 	if( i == 6 ) return 0; //not in array
 	
@@ -780,7 +780,7 @@ int ( *random_available_sqr( int available[36][2], int sqr[2], int arr[4][2] ) )
 		
 		int i = 0;
 		
-		for( int k = 0; available[k][0] != 6 && available[k][1] != 6 && k < 36; k++ ) i++;
+		for( int k = 0; k < 36 && available[k][0] != 6 && available[k][1] != 6; k++ ) i++;
 		
 		if( i==0 ) return NULL;
 		
