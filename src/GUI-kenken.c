@@ -318,7 +318,7 @@ int main( int argc, char* args[] )
 						e.button.y > showkksolution.btn.y && 
 						e.button.y < showkksolution.btn.y + showkksolution.btn.h ){
 						
-                  destroy_kenken( &usrkk );
+                        destroy_kenken( &usrkk );
 
 						copy_kenken( &game, &usrkk );
 					
@@ -340,6 +340,7 @@ int main( int argc, char* args[] )
 						//cleanup
 						free_corner_number_textures( &tlhead );
 						
+                        destroy_corner_number_textures( textrects );
 						
 						for(int i = 0; i < 36; i++) textrects[i] = NULL;
 						
@@ -366,7 +367,7 @@ int main( int argc, char* args[] )
 							
 							generate_kenken( &game );
                             
-                     destroy_kenken( &dmygame );
+                            destroy_kenken( &dmygame );
                             
 							copy_kenken( &game, &dmygame );
 							for(int i = 0; i < 6; i++){
@@ -379,7 +380,7 @@ int main( int argc, char* args[] )
 							
 						}
 						
-                  destroy_kenken( &game );
+                        destroy_kenken( &game );
                         
 						copy_kenken( &dmygame, &game );
                         
@@ -391,8 +392,6 @@ int main( int argc, char* args[] )
 								horiedge[i][j] = 1;
 							}
 						}
-						
-						destroy_corner_number_textures( textrects );
 						
 						create_cnr_nums_list( &tlhead, game );
 						
@@ -545,7 +544,7 @@ int main( int argc, char* args[] )
 			destroy_button_text( &chkbtntxt );
 			destroy_button_text( &quitkktxt );
 			destroy_button_text( &newkktxt );
-         destroy_button_text( &savekktxt );
+            destroy_button_text( &savekktxt );
 			
 			free_corner_number_textures( &tlhead );
 
