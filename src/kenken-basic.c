@@ -273,19 +273,19 @@ int random_available( int available[6] ){
 	
 }
 
-int remove_available( int* available, int number ){
+int remove_available( int available[6], int number ){
 	
 	if( number < 1 || number > 6 ) return 0;
 	
 	int i = 0;
 	
-	while( *( available+i ) != number && i < 6 ) i++;
+	while( available[i] != number && i < 6 ) i++;
 	
 	if( i == 6 ) return 0; //not in array
 	
-	for( int j = i; j < 5; j++ ) *( available + j ) = *( available + j + 1 );
+	for( int j = i; j < 5; j++ ) available[j] = available[j + 1] ;
 	
-	*( available+5 ) = 0;
+	available[5] = 0;
 	
 	return 1; //success
 	
@@ -344,7 +344,9 @@ int fill_square( int i, int j, int arr[6][6] ){
 }
 
 int generate_kenken( struct kenken *kenkenptr ){
-	
+
+   for(int i = 0; i < 36; i++) kenkenptr->grid[i%6][i/6] = 0;
+
 	//srand( time( NULL ) );
 	r_fill_grid( kenkenptr->grid );
 	
@@ -399,7 +401,7 @@ int generate_constraints( struct kenken *kenkenptr ){
 		
 	}
 	
-	struct node_ctr *dummy_ptr;
+	struct node_ctr *dummy_ptr = NULL;
 	
 	
 	//creates constraint of 4 squares
@@ -539,7 +541,7 @@ struct node_square *random_square_walk( int length, int arr[36][2], int kenken[6
 			
 		}
 		
-		int arr2[4][2];
+		int arr2[4][2] = {0};
 		
 		if( l == 0 ){ //randomly selects first square of the walk
 			

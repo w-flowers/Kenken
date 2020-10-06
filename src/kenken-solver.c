@@ -7,7 +7,7 @@ int solve_kenken( struct kenken *kkptr ){
 	
 	for( int i = 0; i < 6; i++ ){
 		
-		for( int j = 0; j<6; j++ ){
+		for( int j = 0; j < 6; j++ ){
 			
 			if( kkptr->grid[i][j] == 0 ){
 				
@@ -140,8 +140,8 @@ int solve_kenken( struct kenken *kkptr ){
 	
 	}
 	
-	struct node_ctr *sqrctr[6][6];
-	struct node_square *sqrnumnd[6][6];
+	struct node_ctr *sqrctr[6][6] = {0};
+	struct node_square *sqrnumnd[6][6] = {0};
 	
 	for( struct node_ctr *dmy = local_ctrs_head; dmy!=NULL; dmy = dmy->next_node ){
 		
@@ -390,7 +390,7 @@ int reduce_constraint_arrays_1( struct constraint *ctr, struct pzlsqr psqrs[6][6
 			
 		}
 		
-		if( ctr->op == DIVOP ){
+      else if( ctr->op == DIVOP ){
 			
 			for( int i = 0; i < 6; i++ ){
 				
@@ -407,7 +407,7 @@ int reduce_constraint_arrays_1( struct constraint *ctr, struct pzlsqr psqrs[6][6
 			
 		}
 		
-		if( ctr->op == SUBOP ){
+      else if( ctr->op == SUBOP ){
 			
 			for( int i = 0; i < 6; i++ ){
 				
@@ -423,7 +423,7 @@ int reduce_constraint_arrays_1( struct constraint *ctr, struct pzlsqr psqrs[6][6
 		
 		}
 		
-		if( ctr->op == MULTOP ){
+      else if( ctr->op == MULTOP ){
 			
 			for( int i = 0; i < 6; i++ ){
 				
@@ -1224,7 +1224,7 @@ int brute_fill_grid_2( struct node_ctr *curr_cst, struct node_square *curr_sqr,
 				
 				if( !valid_constraint( &( curr_cst->constraint ) ) ) return 0;
 				
-				return bfg2_has_mult_sol( curr_cst, curr_sqr, psqrs, psqrs2, dmypsqrs, init_sol, 
+				return bfg2_has_mult_sol( psqrs, psqrs2, dmypsqrs, init_sol, 
 					init_csts );
 			}
 			else{
@@ -1239,7 +1239,7 @@ int brute_fill_grid_2( struct node_ctr *curr_cst, struct node_square *curr_sqr,
 					
 					//check for mult solutions, the return 1 if successful, -1 if mult sol
 					
-					return bfg2_has_mult_sol( curr_cst, curr_sqr, psqrs, psqrs2, dmypsqrs, 
+					return bfg2_has_mult_sol( psqrs, psqrs2, dmypsqrs, 
 						init_sol, init_csts );
 					
 				}
@@ -1351,9 +1351,7 @@ int brute_fill_grid_2( struct node_ctr *curr_cst, struct node_square *curr_sqr,
 }
 
 //NOTE: Contains a call to brute_fill_grid_2 -- best viewed as a helper function for it
-int bfg2_has_mult_sol( struct node_ctr *curr_cst, struct node_square *curr_sqr, 
-	
-	struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], struct pzlsqr dmypsqrs[6][6], 
+int bfg2_has_mult_sol( struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], struct pzlsqr dmypsqrs[6][6], 
 	
 	int init_sol[6][6], struct node_ctr *init_csts ){
 	

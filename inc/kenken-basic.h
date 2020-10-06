@@ -59,7 +59,7 @@ void r_fill_grid( int [6][6] );
 int random_available( int[6] );
 //takes an array of available integers padded with 0's and returns one of those integers **TESTED -- WORKS
 
-int remove_available( int*, int );
+int remove_available( int[6], int );
 //removes a given number ( 1-6 ) from the list of available numbers for a square **TESTED -- WORKS
 //returns 1 if an element is removed, 0 otherwise
 

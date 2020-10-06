@@ -11,11 +11,11 @@ int main(){
 	int nosol = 0;
 	int dmyarr[6][6];
 	int test2;
-	for(int i = 0; i < 1000; i++){
+	for(int i = 0; i < 10; i++){
 		//printf("pre gk entered\n");
 		generate_kenken(&test);
 		//printf("here\n");
-		if(!kenken_valid(&test)) printf("big fuck up");
+		if(kenken_invalid(&test)) printf("big fuck up");
 		//printf("post gk entered\n");
 		for(int j = 0; j < 36; j++){
 			//printf("%d", test.grid[j%6][j/6]);
@@ -30,7 +30,7 @@ int main(){
 		//if(!kenken_valid(&test)) printf("invalid kenken result %d", test2);
 		//printf("%d\n", test2);
 		if(!test2){
-			for(int j = 0; j < 36; j++){
+			/*for(int j = 0; j < 36; j++){
 				printf("%d", dmyarr[j%6][j/6]);
 				if(!((j+1)%6))printf("\n");
 			}
@@ -40,7 +40,7 @@ int main(){
 					printf("%d ", dmy2->entry);
 				}
 				printf("\n");
-			}
+			}*/
 			nosol++;
 		}
 		else if(test2 == 1) onesol++;
@@ -51,5 +51,16 @@ int main(){
 	printf("os%dns%dms%d\n", onesol, nosol, multsol);
 	t2 = (int) time(NULL);
 	printf("%ds\n", (t2-t1));
+   
+   generate_kenken( &test );
+   
+   struct kenken kk2;
+   
+   copy_kenken( &test, &kk2 );
+
+   destroy_kenken( &test );
+
+   destroy_kenken( &kk2 );
+
 	return 0;
 }

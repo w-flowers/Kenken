@@ -55,9 +55,7 @@ int brute_fill_grid_2(struct node_ctr *curr_cst, struct node_square *curr_sqr,
 
 
 //helper for brute fill grid 2
-int bfg2_has_mult_sol(struct node_ctr *curr_cst, struct node_square *curr_sqr, 
-
-	struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], struct pzlsqr dmypsqrs[6][6], 
+int bfg2_has_mult_sol( struct pzlsqr psqrs[6][6], struct pzlsqr psqrs2[6][6], struct pzlsqr dmypsqrs[6][6], 
 	
 	int init_sol[6][6], struct node_ctr *init_csts);
 

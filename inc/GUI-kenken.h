@@ -2,7 +2,11 @@
 #define GUIKENKEN_H_
 
 #include <SDL2/SDL.h>
+#ifdef __APPLE__
 #include <SDL2_ttf/SDL_ttf.h>
+#else
+#include <SDL2/SDL_ttf.h>
+#endif
 #include "kenken-solver.h"
 
 #define NONE 0

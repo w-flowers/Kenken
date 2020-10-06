@@ -1,7 +1,7 @@
 .POSIX:
 .SUFFIXES:
 CC		= gcc
-CFLAGS	= -Wall -Wextra 
+CFLAGS	= -Wall -Wextra -O0 -g
 LDLIBS	= -F /Library/Frameworks `sdl2-config --cflags --libs` -lSDL2_ttf
 
 all: kenken

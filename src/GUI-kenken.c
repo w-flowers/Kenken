@@ -34,8 +34,6 @@ int main( int argc, char* args[] )
    		 		exit(2);
 			}
 			
-			TTF_Font *font2;
-			font2 = TTF_OpenFont(TYPEFACE, BIG_FONT);
 			SDL_Rect texture_rect;
 			texture_rect.x = 0;  //the x coordinate
 			texture_rect.y = 0; // the y coordinate
@@ -182,7 +180,7 @@ int main( int argc, char* args[] )
 				
 				generate_kenken( &game );
                 
-                destroy_kenken( &dmygame );
+            destroy_kenken( &dmygame );
 				
 				copy_kenken( &game, &dmygame );
 				
@@ -195,7 +193,7 @@ int main( int argc, char* args[] )
 				update_usr_kenken( &game );
 			}
 			
-            destroy_kenken( &game );
+         destroy_kenken( &game );
             
 			copy_kenken( &dmygame, &game );
 			destroy_kenken( &dmygame );
@@ -320,6 +318,8 @@ int main( int argc, char* args[] )
 						e.button.y > showkksolution.btn.y && 
 						e.button.y < showkksolution.btn.y + showkksolution.btn.h ){
 						
+                  destroy_kenken( &usrkk );
+
 						copy_kenken( &game, &usrkk );
 					
 					}
@@ -366,7 +366,7 @@ int main( int argc, char* args[] )
 							
 							generate_kenken( &game );
                             
-                            destroy_kenken( &dmygame );
+                     destroy_kenken( &dmygame );
                             
 							copy_kenken( &game, &dmygame );
 							for(int i = 0; i < 6; i++){
@@ -379,7 +379,7 @@ int main( int argc, char* args[] )
 							
 						}
 						
-                        destroy_kenken( &game );
+                  destroy_kenken( &game );
                         
 						copy_kenken( &dmygame, &game );
                         
@@ -538,7 +538,6 @@ int main( int argc, char* args[] )
 			//Cleanup
 			TTF_Quit();
 			//Destroy renderer
-			SDL_DestroyRenderer( renderer );
 			destroy_corner_number_textures( textrects );
 			destroy_central_number_textures( num_texts );
 			
@@ -546,10 +545,14 @@ int main( int argc, char* args[] )
 			destroy_button_text( &chkbtntxt );
 			destroy_button_text( &quitkktxt );
 			destroy_button_text( &newkktxt );
-            destroy_button_text( &savekktxt );
+         destroy_button_text( &savekktxt );
 			
 			free_corner_number_textures( &tlhead );
+
+			SDL_DestroyRenderer( renderer );
 			
+         destroy_kenken( &game );
+         destroy_kenken( &usrkk );
         }
 		
 	    //Destroy window
@@ -684,7 +687,7 @@ int draw_corner_number_textures( SDL_Renderer *renderer, struct node_ctrdraw *tl
 	
 	
 	//Set font/size/other key features
-	SDL_Color colour = {0, 0, 0};
+	SDL_Color colour = {0, 0, 0, 255};
 	TTF_Font *font;
 	font = TTF_OpenFont(TYPEFACE, SMALL_FONT);
 	
@@ -770,7 +773,7 @@ int draw_central_number_textures(SDL_Renderer *renderer, SDL_Texture *num_texts[
 	
 	
 	//Set font/size/other key features
-	SDL_Color colour = {0, 0, 0};
+	SDL_Color colour = {0, 0, 0, 255};
 	TTF_Font *font;
 	font = TTF_OpenFont(TYPEFACE, BIG_FONT);
 	
@@ -906,7 +909,7 @@ int draw_button_text( SDL_Renderer *renderer, SDL_Texture **text_texture,
 	int txtbox_dims[2], char *text ){
 	
 	
-	SDL_Color colour = {0, 0, 0};
+	SDL_Color colour = {0, 0, 0, 255};
 	TTF_Font *font;
 	font = TTF_OpenFont( TYPEFACE, MEDIUM_FONT );
 	
