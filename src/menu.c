@@ -169,7 +169,7 @@ int run_load_menu(struct load_menu_args* args)
 
          menu_squares[i].w = 2*SQR_SIZE;
 
-         menu_squares[i].h = SQR_SIZE / 2;
+         menu_squares[i].h = SQR_SIZE / 2 - 1;
       }
 
       struct SDL_Point menu_corners[ 2*LMV_SIZE + 2 ];
@@ -186,18 +186,20 @@ int run_load_menu(struct load_menu_args* args)
          menu_corners[ 2*i + 1 ].y = menu_squares[i].y - 1;
       }
 
-      menu_corners[ 2*LMV_SIZE ].x = menu_squares[LMV_SIZE].x - 1;
+      menu_corners[ 2*LMV_SIZE ].x = menu_squares[LMV_SIZE - 1].x - 1;
 
-      menu_corners[ 2*LMV_SIZE ].y = menu_squares[LMV_SIZE].y - 1;
+      menu_corners[ 2*LMV_SIZE ].y =
+         menu_squares[LMV_SIZE - 1].y + menu_squares[LMV_SIZE - 1].h;
 
-      menu_corners[ 2*LMV_SIZE + 1 ].x = menu_squares[LMV_SIZE].x + 
-         menu_squares[LMV_SIZE].w;
+      menu_corners[ 2*LMV_SIZE + 1 ].x = menu_squares[LMV_SIZE - 1].x + 
+         menu_squares[LMV_SIZE - 1].w;
 
-      menu_corners[ 2*LMV_SIZE + 1 ].y = menu_squares[LMV_SIZE].y - 1;
+      menu_corners[ 2*LMV_SIZE + 1 ].y = 
+         menu_squares[LMV_SIZE - 1].y + menu_squares[LMV_SIZE - 1].h;
 
       //Button that loads a kenken
       struct button_w_border loadkk;
-      create_button_w_border(&loadkk, MARGIN, MARGIN + LMV_SIZE*SQR_SIZE/2, 
+      create_button_w_border(&loadkk, MARGIN, MARGIN + (LMV_SIZE+2)*SQR_SIZE/2,
             5*SQR_SIZE/2, SQR_SIZE);
 
       SDL_Texture *loadkktxt = NULL;
@@ -326,6 +328,8 @@ int create_load_menu_item( SDL_Renderer *renderer, struct load_menu_item *item,
       return 1;
    }
 
+   if( entry->d_name[0] == '.' ) return 1;
+
    SDL_Color colour = { 0, 0, 0, 255 };
 
    TTF_Font *font;
@@ -396,7 +400,7 @@ int handle_key_event( SDL_Event *e, struct load_menu *menu,
             {
                view->pos_bottom = menu->current + 1;
 
-               view->pos_top = view->pos_bottom - 5;
+               view->pos_top = view->pos_bottom - LMV_SIZE;
 
                view->items = &menu->buffer[view->pos_top];
             }
@@ -414,6 +418,7 @@ int handle_key_event( SDL_Event *e, struct load_menu *menu,
 int handle_mouse_event( SDL_Event *e, struct load_menu *menu, 
       struct menu_view *view )
 {
+   return 0;
 }
 
 int render_load_menu( SDL_Renderer *renderer, struct menu_view *view,
@@ -444,4 +449,36 @@ int render_load_menu( SDL_Renderer *renderer, struct menu_view *view,
           menu_corners[2*LMV_SIZE + 1].y );
 
 
+   SDL_SetRenderDrawColor( renderer, 210, 210, 250, SDL_ALPHA_OPAQUE );
+   SDL_RenderFillRect( renderer, &menu_squares[menu->current - view->pos_top] );
+
+   draw_loadmenu_text( renderer, menu, view, menu_squares );
+
+   return 0;
 }
+
+int draw_loadmenu_text( SDL_Renderer *renderer, struct load_menu *menu,
+      struct menu_view *view, SDL_Rect menu_squares[] )
+{
+   for( int i = 0; i < LMV_SIZE; i++ )
+   {
+      if( view->pos_top + i < menu->offset )
+      {
+         SDL_Rect txtbox;
+
+         int c_x = menu_squares[i].x + menu_squares[i].w/2;
+         int c_y = menu_squares[i].y + menu_squares[i].h/2;
+
+         txtbox.x = c_x - view->items[i].text_dims[0]/2;
+         txtbox.y = c_y - view->items[i].text_dims[1]/2;
+
+         txtbox.w = view->items[i].text_dims[0];
+         txtbox.h = view->items[i].text_dims[1];
+
+         SDL_RenderCopy( renderer, view->items[i].text, NULL, &txtbox ); 
+      }
+   }
+
+   return 0;
+}
+

@@ -480,8 +480,6 @@ int main( int argc, char* args[] )
                      dmyptr++;
                   }
 
-                  printf( timestr );
-
                   //NOTE - JUST FOR TESTING - DELETE THE QUIT IN PROD    
                   quit = save_kenken( &game, usrkk.grid, timestr );
 
