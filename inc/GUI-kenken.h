@@ -8,21 +8,27 @@
 #include <SDL2/SDL_ttf.h>
 #endif
 #include "kenken-solver.h"
+#include <unistd.h>
+
+#include "menu.h"
+
+#include "save-kenken.h"
+
 
 #define NONE 0
 #define INCORRECT 1
 #define PARTCORRECT 2
 #define CORRECT 3
-#define TYPEFACE "OpenSans-Regular.ttf"
 
 //Screen dimension constants
-const int MARGIN = 50;
-const int SQR_SIZE = 72;
-const int SCREEN_WIDTH = 10*SQR_SIZE + 2*MARGIN;
-const int SCREEN_HEIGHT = 8*SQR_SIZE + 2*MARGIN;
-const int SMALL_FONT = 14;
-const int MEDIUM_FONT = 22;
-const int BIG_FONT = 60;
+extern const int MARGIN;
+extern const int SQR_SIZE;
+extern const int SCREEN_WIDTH;
+extern const int SCREEN_HEIGHT;
+extern const int SMALL_FONT;
+extern const int MEDIUM_FONT;
+extern const int BIG_FONT;
+char TYPEFACE[1024];
 
 //Takes a single constraint and determines which edges of each square are internal to this 
 //constraint. If an edge is internal, the corresponding int in vert/horiedge is set to 0.

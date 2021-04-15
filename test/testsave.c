@@ -8,7 +8,8 @@ int main(){
 	for(int i = 0; i < 36; i++) usrgrid[i/6][i%6] = 0;
 	save_kenken(&kkptr, usrgrid, "name");
 	struct kenken kenken2;
-	int test = load_kenken(&kenken2, "name");
+	for(int i = 0; i < 36; i++) usrgrid[i/6][i%6] = 1;
+	int test = load_kenken(&kenken2, usrgrid, "name");
 	//int test = kenken_valid(&kenken2);
 	printf("%d\n", test);
 	return 0;
