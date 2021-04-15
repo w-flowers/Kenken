@@ -49,8 +49,6 @@ struct load_menu_item
 
 struct load_menu
 {
-   struct load_menu_item buffer[];
-
    // current selected entry
    int current;
 
@@ -59,15 +57,17 @@ struct load_menu
 
    //size of array
    int size;
+
+   struct load_menu_item *buffer;
 };
 
 struct menu_view
 {
-   struct load_menu_item *items;
-
    int pos_top;
 
    int pos_bottom;
+
+   struct load_menu_item *items;
 };
 
 int run_menu(struct run_menu_args* args);
@@ -85,6 +85,11 @@ int destroy_load_menu( struct load_menu *menu );
 int handle_key_event( SDL_Event *e, struct load_menu *menu, 
       struct menu_view *view );
 
-int handle_mouse_event( SDL_Event *e, struct load_menu *menu );
+int handle_mouse_event( SDL_Event *e, struct load_menu *menu,
+      struct menu_view *view );
+
+int render_load_menu( SDL_Renderer *renderer, struct menu_view *view,
+      struct load_menu *menu, SDL_Rect menu_squares[],
+      SDL_Point menu_corners[] );
 
 #endif

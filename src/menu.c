@@ -102,17 +102,17 @@ int run_menu(struct run_menu_args* args)
 
             struct load_menu_args rlm_args;
 
-            rlm_args.typeface = args.typeface;
+            rlm_args.typeface = args->typeface;
 
-            rlm_args.game = args.game;
+            rlm_args.game = args->game;
 
-            rlm_args.usrkk = args.usrkk;
+            rlm_args.usrkk = args->usrkk;
 
             rlm_args.window = window;
 
             rlm_args.renderer = renderer;
 
-            rlm_arg.window_rect = &window_rect;
+            rlm_args.window_rect = &window_rect;
 
             if( !run_load_menu( &rlm_args ) )
             {
@@ -154,8 +154,68 @@ int run_load_menu(struct load_menu_args* args)
 
    struct load_menu menu;
 
+   int quit = 0;
+
    if( !init_load_menu( args->renderer, &menu, args->typeface ) )
    {
+      struct SDL_Rect menu_squares[LMV_SIZE];
+
+      // Init squares for menu
+      for( int i = 0; i < LMV_SIZE; i++ )
+      {
+         menu_squares[i].x = MARGIN;
+
+         menu_squares[i].y = MARGIN + i*SQR_SIZE / 2;
+
+         menu_squares[i].w = 2*SQR_SIZE;
+
+         menu_squares[i].h = SQR_SIZE / 2;
+      }
+
+      struct SDL_Point menu_corners[ 2*LMV_SIZE + 2 ];
+
+      // Init corners to for rendering dividing lines
+      for( int i = 0; i < LMV_SIZE; i++ )
+      {
+         menu_corners[ 2*i ].x = menu_squares[i].x - 1;
+
+         menu_corners[ 2*i ].y = menu_squares[i].y - 1;
+
+         menu_corners[ 2*i + 1 ].x = menu_squares[i].x + menu_squares[i].w;
+
+         menu_corners[ 2*i + 1 ].y = menu_squares[i].y - 1;
+      }
+
+      menu_corners[ 2*LMV_SIZE ].x = menu_squares[LMV_SIZE].x - 1;
+
+      menu_corners[ 2*LMV_SIZE ].y = menu_squares[LMV_SIZE].y - 1;
+
+      menu_corners[ 2*LMV_SIZE + 1 ].x = menu_squares[LMV_SIZE].x + 
+         menu_squares[LMV_SIZE].w;
+
+      menu_corners[ 2*LMV_SIZE + 1 ].y = menu_squares[LMV_SIZE].y - 1;
+
+      //Button that loads a kenken
+      struct button_w_border loadkk;
+      create_button_w_border(&loadkk, MARGIN, MARGIN + LMV_SIZE*SQR_SIZE/2, 
+            5*SQR_SIZE/2, SQR_SIZE);
+
+      SDL_Texture *loadkktxt = NULL;
+      int loadkktxtdims[2];
+      char *lkkt = "Load Kenken";
+      draw_button_text( args->renderer, &loadkktxt, loadkktxtdims, lkkt );
+
+      struct menu_view view;
+
+      view.items = &menu.buffer[0];
+
+      view.pos_top = 0;
+
+      view.pos_bottom = LMV_SIZE <= menu.offset ?
+         LMV_SIZE : menu.offset;
+
+      SDL_Event e;
+
       //Menu loop in here
       while(!quit)
       {
@@ -167,19 +227,38 @@ int run_load_menu(struct load_menu_args* args)
             break;
          }
 
-         handle_key_event( &e );
+         else if( e.type == SDL_KEYDOWN )
+         {
+            if( ( quit = handle_key_event( &e, &menu, &view ) ) ) break;
+         }
 
-         handle_mouse_event( &e );
+         else if( e.type == SDL_MOUSEBUTTONUP )
+         {
+            if( ( quit = handle_mouse_event( &e, &menu, &view ) ) ) break;
+         }
 
-         render_menu();
+         //Colour the screen
+         SDL_SetRenderDrawColor( args->renderer, 255, 255, 255, SDL_ALPHA_OPAQUE );
+         SDL_RenderFillRect( args->renderer, args->window_rect );
+
+         render_load_menu( args->renderer, &view, &menu, menu_squares, menu_corners );
+
+         draw_button( args->renderer, loadkktxt, &loadkk, loadkktxtdims );
+
+         SDL_RenderPresent( args->renderer );
+      }
+
+      destroy_button_text( &loadkktxt );
+
+      if( quit == LOADING )
+      {
+         //insert loading code here
       }
    }
 
-
-
    destroy_load_menu( &menu );
 
-   return 0;
+   return quit;
 }
 
 int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu, 
@@ -199,7 +278,7 @@ int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu,
 
    char dir_buff[FILENM_SIZE];
 
-   if(snprintf(dir_buff, sizeof(dir_buff), "%s/%s", FILEPATH, "savegames") >= sizeof(dir_buff))
+   if( snprintf(dir_buff, sizeof(dir_buff), "%s/%s", FILEPATH, "savegames") >= sizeof(dir_buff) )
    {
       fprintf(stderr, "Filepath too long!!!\n");
       return 1;
@@ -226,10 +305,10 @@ int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu,
          menu->size *= 4;
       }
 
-      if( !create_load_menu_item( renderer, &menu->buffer[offset],
+      if( !create_load_menu_item( renderer, &menu->buffer[menu->offset],
                direntry, typeface ) )
       {
-         offset++;
+         menu->offset++;
       }
    }
 
@@ -240,7 +319,7 @@ int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu,
 int create_load_menu_item( SDL_Renderer *renderer, struct load_menu_item *item, 
       struct dirent *entry, char *typeface )
 {
-   if( snprint( item->filename, FILENM_SIZE, entry->d_name ) >= FILENM_SIZE )
+   if( snprintf( item->filename, FILENM_SIZE, entry->d_name ) >= FILENM_SIZE )
    {
       fprintf( stderr, "Filename too long\n" );
 
@@ -301,12 +380,12 @@ int handle_key_event( SDL_Event *e, struct load_menu *menu,
 
                view->pos_top = menu->current;
 
-               view->pos_bottom = ( pos->top + LMV_SIZE <= menu->offset ) ?
-                  ( pos->top + LMV_SIZE ) : menu->offset; 
+               view->pos_bottom = ( view->pos_top + LMV_SIZE <= menu->offset ) ?
+                  ( view->pos_top + LMV_SIZE ) : menu->offset; 
             }
          }
 
-         break;
+         return 0;
 
       case SDLK_DOWN:
          if( menu->current < menu->offset - 1 )
@@ -319,19 +398,50 @@ int handle_key_event( SDL_Event *e, struct load_menu *menu,
 
                view->pos_top = view->pos_bottom - 5;
 
-               view->items = &menu->buffer[pos_top];
+               view->items = &menu->buffer[view->pos_top];
             }
          }
 
-         break;
+         return 0;
 
       case SDLK_RETURN:
-         //load the current menu item to the pointers in args OR set a flag
-
-         break;
+         // Return LOADING - Loads currently selected square
+         return LOADING;
    }
    return 0;
 }
 
-int handle_mouse_event( SDL_Event *e, struct load_menu *menu );
+int handle_mouse_event( SDL_Event *e, struct load_menu *menu, 
+      struct menu_view *view )
+{
+}
 
+int render_load_menu( SDL_Renderer *renderer, struct menu_view *view,
+      struct load_menu *menu, SDL_Rect menu_squares[],
+      SDL_Point menu_corners[] )
+{
+   SDL_SetRenderDrawColor( renderer, 245, 245, 245, SDL_ALPHA_OPAQUE );
+   SDL_RenderFillRects( renderer, menu_squares, LMV_SIZE );
+
+   SDL_SetRenderDrawColor( renderer, 0, 0, 0, SDL_ALPHA_OPAQUE );
+   SDL_RenderDrawPoints( renderer, menu_corners, 2*LMV_SIZE + 2 );
+
+   for( int i = 0; i < LMV_SIZE; i++ )
+   {
+      SDL_RenderDrawLine( renderer, menu_corners[2*i].x, menu_corners[2*i].y,
+            menu_corners[2*i + 1].x, menu_corners[2*i + 1].y);
+
+      SDL_RenderDrawLine( renderer, menu_corners[2*i].x, menu_corners[2*i].y,
+            menu_corners[2*i + 2].x, menu_corners[2*i + 2].y);
+      
+      SDL_RenderDrawLine( renderer, menu_corners[2*i + 1].x,
+            menu_corners[2*i + 1].y, menu_corners[2*i + 3].x,
+            menu_corners[2*i + 3].y);
+   }
+
+   SDL_RenderDrawLine( renderer, menu_corners[2*LMV_SIZE].x,
+          menu_corners[2*LMV_SIZE].y, menu_corners[2*LMV_SIZE + 1].x,
+          menu_corners[2*LMV_SIZE + 1].y );
+
+
+}
