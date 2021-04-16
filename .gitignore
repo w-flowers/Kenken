@@ -3,3 +3,9 @@
 *.swp
 
 *valkenken*
+
+kenken
+
+obj/
+
+savegames/

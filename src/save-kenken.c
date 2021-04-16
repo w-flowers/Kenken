@@ -1,12 +1,5 @@
-#include<string.h>
-#include<stdio.h>
-#include<ctype.h>
-#include<stdlib.h>
-#include "../inc/kenken-basic.h"
-#include "../inc/kenken-basic.c"
+#include "../inc/save-kenken.h"
 
-const int max = 200;
-const int KKSIZE = 6;
 /*
 .kenken is formatted as follows
 g: //start the grid
@@ -18,22 +11,22 @@ c: //start the constraints
 /c //end the constraints
 */
 
-int save_grid( int grid[6][6] , FILE *kkfile );
-
-int save_constraints( struct node_ctr *ctrs, FILE *kkfile );
-
-int read_grid_helper ( int target[6][6], FILE *kkfile );
-
-int read_constraints( struct kenken *kkptr, FILE *kkfile );
+const int max = 200;
+const int KKSIZE = 6;
 
 //saves a kenken to a file in the format listed above
 int save_kenken(struct kenken *kkptr, int usrgrid[6][6], char* filename){
 	
-	char filepath[50];
+	char filepath[1024];
 	
 	int filenmlen = strlen(filename);
 	
-	snprintf(filepath, 20 + filenmlen, "savegames/%s.kenken", filename);
+
+   if(snprintf(filepath, sizeof(filepath), "%s/savegames/%s.kenken", FILEPATH, filename) >= sizeof(filepath))
+   {
+      fprintf(stderr, "Filepath too long!!!\n");
+      return EXIT_FAILURE;
+   }
 	
 	FILE *kkfile = fopen(filepath, "w");
 	
@@ -66,13 +59,18 @@ int save_kenken(struct kenken *kkptr, int usrgrid[6][6], char* filename){
 
 //takes the contents of a .kenken and loads it to a kenken pointer
 //returns one and wipes the kkptr on failure
-int load_kenken(struct kenken *kkptr, char* filename){
+int load_kenken(struct kenken *kkptr, int usrgrid[6][6], char* filename){
 	//destroy_kenken(kkptr);
-	char filepath[50];
+	char filepath[1024];
 	char buffer[max];
 	int filenmlen = strlen(filename);
 	int errind = 0;
-	snprintf(filepath, 20 + filenmlen, "savegames/%s.kenken", filename);
+
+   if(snprintf(filepath, sizeof(filepath), "%s/savegames/%s.kenken", FILEPATH, filename) >= sizeof(filepath))
+   {
+      fprintf(stderr, "Filepath too long!!!\n");
+      return EXIT_FAILURE;
+   }
 	FILE *kkfile = fopen(filepath, "r");
 	if(kkfile == NULL) return 1;
 	setbuf(kkfile, NULL);
@@ -317,6 +315,58 @@ int load_kenken(struct kenken *kkptr, char* filename){
 							goto ERR_ROUTINE;
 						}
 					}
+				}
+			}
+		}
+      if(!strncmp(buffer, "u:\n", 4)){
+			int hori = 0;
+			int vert = 0;
+			while(fgets(buffer, max, kkfile)){
+				if(!strncmp(buffer, "/u\n", 4)){
+					if(vert != KKSIZE){
+						errind = 1;
+						printf("Err1\n");
+						goto ERR_ROUTINE;
+					}
+					success_grid++;
+					break;
+				}
+				else{
+					if(buffer[0] != '['){
+						errind = 1;
+						printf("Err2\n");
+						goto ERR_ROUTINE;
+					}
+					int bufind = 0;
+					while(buffer[bufind] != ']' && buffer[bufind] && bufind < max){
+						bufind++;
+						char intbuf[20];
+						int ibind = 0;
+						while(isdigit(buffer[bufind])&& bufind < max && ibind < 20){
+							intbuf[ibind] = buffer[bufind];
+							bufind++;
+							ibind++;
+						}
+						intbuf[ibind] = '\0';
+						int cur_num = 0;
+						if(intbuf[0] != '\0'){
+							cur_num = (int) strtol(intbuf, NULL, 10);
+							usrgrid[hori][vert] = cur_num;
+							hori++;
+						}
+						if(hori > KKSIZE){
+							errind = 1;
+							printf("Err3\n");
+							goto ERR_ROUTINE;
+						}
+					}
+					if(hori != KKSIZE){
+						errind = 1;
+						printf("Err4\n");
+						goto ERR_ROUTINE;
+					}
+					hori = 0;
+					vert++;
 				}
 			}
 		}
