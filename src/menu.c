@@ -348,7 +348,7 @@ int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu,
 
    DIR *dir = opendir( dir_buff );
 
-   while( direntry = readdir(dir) )
+   while( ( direntry = readdir(dir) ) )
    {
       // Resize array if necessary
       if( menu->offset == menu->size )

@@ -457,7 +457,7 @@ int main( int argc, char* args[] )
 
                   char timestr[32];
 
-                  if( !strftime(timestr, sizeof(timestr), "%F\-%T",  now ) )
+                  if( !strftime(timestr, sizeof(timestr), "%F-%T",  now ) )
                   {
                      fprintf(stderr, "Filepath too long!!!\n");
                      return 1;

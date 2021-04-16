@@ -6,6 +6,6 @@
 
 kenken
 
-obj/
+obj/*.o
 
-savegames/
+savegames/*
