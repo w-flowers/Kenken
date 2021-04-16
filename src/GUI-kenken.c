@@ -534,8 +534,7 @@ int main( int argc, char* args[] )
 		    }
 			//End event loop
 			
-			//Cleanup
-			TTF_Quit();
+			
 			//Destroy renderer
 			destroy_corner_number_textures( textrects );
 			destroy_central_number_textures( num_texts );
@@ -547,6 +546,9 @@ int main( int argc, char* args[] )
             destroy_button_text( &savekktxt );
 			
 			free_corner_number_textures( &tlhead );
+            
+			//Cleanup
+			TTF_Quit();
 
 			SDL_DestroyRenderer( renderer );
 			
