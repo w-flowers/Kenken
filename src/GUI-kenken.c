@@ -193,42 +193,56 @@ int main( int argc, char* args[] )
 
          draw_central_number_textures(renderer, num_texts, txtboxdim);
 
-
-         generate_kenken(&game);
          struct kenken dmygame;
-         copy_kenken(&game, &dmygame);
 
-         for(int i = 0; i < 6; i++){
-            for(int j = 0; j < 6; j++){
-               game.grid[i][j] = 0;
-            }
-         }
-         update_usr_kenken(&game);
-
-         while( solve_kenken( &game ) != 1 ){
-
-            destroy_kenken( &game );
-
-            generate_kenken( &game );
-
-            destroy_kenken( &dmygame );
-
-            copy_kenken( &game, &dmygame );
+         if( menu_ret != LOADING )
+         {
+            generate_kenken(&game);
+            copy_kenken(&game, &dmygame);
 
             for(int i = 0; i < 6; i++){
                for(int j = 0; j < 6; j++){
                   game.grid[i][j] = 0;
                }
             }
+            update_usr_kenken(&game);
 
-            update_usr_kenken( &game );
+            while( solve_kenken( &game ) != 1 ){
+
+               destroy_kenken( &game );
+
+               generate_kenken( &game );
+
+               destroy_kenken( &dmygame );
+
+               copy_kenken( &game, &dmygame );
+
+               for(int i = 0; i < 6; i++){
+                  for(int j = 0; j < 6; j++){
+                     game.grid[i][j] = 0;
+                  }
+               }
+
+               update_usr_kenken( &game );
+            }
+
+            destroy_kenken( &game );
+
+            copy_kenken( &dmygame, &game );
+            destroy_kenken( &dmygame );
+
+
+            //Create copy of puzzle for user to fill in
+            copy_kenken( &game, &usrkk );
+
+            for(int i = 0; i < 6; i++){
+               for(int j = 0; j < 6; j++){
+                  usrkk.grid[i][j] = 0;
+               }
+            }
+
+            update_usr_kenken( &usrkk );
          }
-
-         destroy_kenken( &game );
-
-         copy_kenken( &dmygame, &game );
-         destroy_kenken( &dmygame );
-
 
          //Arrays to store which internal edges need drawing
          int vertedge[5][6];
@@ -247,17 +261,6 @@ int main( int argc, char* args[] )
 
          create_cnr_nums_list( &tlhead, game );
 
-
-         //Create copy of puzzle for user to fill in
-         copy_kenken( &game, &usrkk );
-
-         for(int i = 0; i < 6; i++){
-            for(int j = 0; j < 6; j++){
-               usrkk.grid[i][j] = 0;
-            }
-         }
-
-         update_usr_kenken( &usrkk );
 
 
          draw_corner_number_textures( renderer, tlhead, textrects, corner_numbers );
@@ -455,29 +458,10 @@ int main( int argc, char* args[] )
 
                   char timestr[32];
 
-                  if(snprintf(timestr, sizeof(timestr), "%s", asctime( now ) ) >= sizeof(timestr) )
+                  if( !strftime(timestr, sizeof(timestr), "%F\-%T",  now ) )
                   {
                      fprintf(stderr, "Filepath too long!!!\n");
                      return 1;
-                  }
-
-                  char *dmyptr = timestr;
-
-                  while( *dmyptr != '\0' )
-                  {
-                     if( *dmyptr == ' ' )
-                     {
-                        *dmyptr = '-';
-                     }
-                     if( *dmyptr == '$' )
-                     {
-                        *dmyptr = 'a';
-                     }
-                     if( *dmyptr == '\n' )
-                     {
-                        *dmyptr = 'n';
-                     }
-                     dmyptr++;
                   }
 
                   //NOTE - JUST FOR TESTING - DELETE THE QUIT IN PROD    

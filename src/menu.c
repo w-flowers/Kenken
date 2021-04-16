@@ -114,9 +114,8 @@ int run_menu(struct run_menu_args* args)
 
             rlm_args.window_rect = &window_rect;
 
-            if( !run_load_menu( &rlm_args ) )
+            if( quit = run_load_menu( &rlm_args ) )
             {
-               quit = LOADING;
                break;
             }
          }
@@ -150,7 +149,12 @@ int run_menu(struct run_menu_args* args)
 
 int run_load_menu(struct load_menu_args* args)
 {
-   if( !args ) return 1;
+   if( !args )
+   {
+      fprintf( stderr, "Run load menu called with NULL argument\n");
+
+      return 1;
+   }
 
    struct load_menu menu;
 
@@ -167,7 +171,7 @@ int run_load_menu(struct load_menu_args* args)
 
          menu_squares[i].y = MARGIN + i*SQR_SIZE / 2;
 
-         menu_squares[i].w = 2*SQR_SIZE;
+         menu_squares[i].w = 5*SQR_SIZE / 2;
 
          menu_squares[i].h = SQR_SIZE / 2 - 1;
       }
@@ -199,13 +203,24 @@ int run_load_menu(struct load_menu_args* args)
 
       //Button that loads a kenken
       struct button_w_border loadkk;
-      create_button_w_border(&loadkk, MARGIN, MARGIN + (LMV_SIZE+2)*SQR_SIZE/2,
+      create_button_w_border(&loadkk, MARGIN, 
+            MARGIN + (2*LMV_SIZE+1)*SQR_SIZE/4,
             5*SQR_SIZE/2, SQR_SIZE);
 
       SDL_Texture *loadkktxt = NULL;
       int loadkktxtdims[2];
       char *lkkt = "Load Kenken";
       draw_button_text( args->renderer, &loadkktxt, loadkktxtdims, lkkt );
+
+      //Button which goes back to main menu
+      struct button_w_border back;
+      create_button_w_border(&back, MARGIN, MARGIN + (LMV_SIZE+3)*SQR_SIZE/2,
+            5*SQR_SIZE/2, SQR_SIZE);
+
+      SDL_Texture *backtxt = NULL;
+      int backtxtdims[2];
+      char *backt = "Back";
+      draw_button_text( args->renderer, &backtxt, backtxtdims, backt );
 
       struct menu_view view;
 
@@ -215,6 +230,18 @@ int run_load_menu(struct load_menu_args* args)
 
       view.pos_bottom = LMV_SIZE <= menu.offset ?
          LMV_SIZE : menu.offset;
+
+      // Render menu so that user doesn't have to input something for it to 
+      // appear
+      SDL_SetRenderDrawColor( args->renderer, 255, 255, 255, SDL_ALPHA_OPAQUE );
+      SDL_RenderFillRect( args->renderer, args->window_rect );
+
+      render_load_menu( args->renderer, &view, &menu, menu_squares, menu_corners );
+
+      draw_button( args->renderer, loadkktxt, &loadkk, loadkktxtdims );
+      draw_button( args->renderer, backtxt, &back, backtxtdims );
+
+      SDL_RenderPresent( args->renderer );
 
       SDL_Event e;
 
@@ -236,7 +263,10 @@ int run_load_menu(struct load_menu_args* args)
 
          else if( e.type == SDL_MOUSEBUTTONUP )
          {
-            if( ( quit = handle_mouse_event( &e, &menu, &view ) ) ) break;
+            if( ( quit = 
+                     handle_mouse_event( &e, &menu, &view, menu_squares, 
+                       back.btn, loadkk.btn ) )
+              ) break;
          }
 
          //Colour the screen
@@ -246,6 +276,7 @@ int run_load_menu(struct load_menu_args* args)
          render_load_menu( args->renderer, &view, &menu, menu_squares, menu_corners );
 
          draw_button( args->renderer, loadkktxt, &loadkk, loadkktxtdims );
+         draw_button( args->renderer, backtxt, &back, backtxtdims );
 
          SDL_RenderPresent( args->renderer );
       }
@@ -255,6 +286,35 @@ int run_load_menu(struct load_menu_args* args)
       if( quit == LOADING )
       {
          //insert loading code here
+
+         // Make filename string
+
+         int dmyusrgrid[6][6] = {0};
+
+         if( load_kenken( args->game,
+                  dmyusrgrid, menu.buffer[menu.current].filename ) )
+         {
+            fprintf( stderr, "Error opening file!\n" );
+
+            quit = 0;
+         }
+
+         else
+         {
+            copy_kenken( args->game, args->usrkk );
+
+            for( int i = 0; i < 36; i++ )
+            {
+               args->usrkk->grid[i%6][i/6] = dmyusrgrid[i%6][i/6];
+            }
+
+            update_usr_kenken( args->usrkk );
+         }
+      }
+
+      if( quit == TO_MENU )
+      {
+         quit = 0;
       }
    }
 
@@ -328,13 +388,19 @@ int create_load_menu_item( SDL_Renderer *renderer, struct load_menu_item *item,
       return 1;
    }
 
+   char *dmyptr = item->filename;
+
    if( entry->d_name[0] == '.' ) return 1;
+
+   while( *(++dmyptr) != '.' );
+
+   *dmyptr = '\0';
 
    SDL_Color colour = { 0, 0, 0, 255 };
 
    TTF_Font *font;
 
-   font = TTF_OpenFont( typeface, MEDIUM_FONT );
+   font = TTF_OpenFont( typeface, 12 );
 
    SDL_Surface *textsurf;
 
@@ -416,8 +482,34 @@ int handle_key_event( SDL_Event *e, struct load_menu *menu,
 }
 
 int handle_mouse_event( SDL_Event *e, struct load_menu *menu, 
-      struct menu_view *view )
+      struct menu_view *view, SDL_Rect menu_squares[],
+     SDL_Rect back, SDL_Rect load )
 {
+   // Handle case where user clicks on one of the load_menu_items
+   for( int i = 0; i < LMV_SIZE; i++ )
+   {
+      if( e->button.x > menu_squares[i].x && e->button.y > menu_squares[i].y
+            && e->button.x < menu_squares[i].x + menu_squares[i].w
+            && e->button.y < menu_squares[i].y + menu_squares[i].h )
+      {
+         menu->current = view->pos_top + i;
+      }
+   }
+
+   // Handle case where user clicks on the load button
+   if( e->button.x > load.x && e->button.y > load.y
+         && e->button.x < load.x + load.w && e->button.y < load.y + load.h )
+   {
+      return LOADING;
+   }
+
+   // Handle case where user clicks on the back button
+   if( e->button.x > back.x && e->button.y > back.y
+         && e->button.x < back.x + back.w && e->button.y < back.y + back.h )
+   {
+      return TO_MENU;
+   }
+
    return 0;
 }
 

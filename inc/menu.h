@@ -8,6 +8,7 @@
 #define QUIT_MENU 1
 #define GO_TO_GAME 2
 #define LOADING 3
+#define TO_MENU 4
 
 #define FILENM_SIZE 256
 
@@ -86,10 +87,14 @@ int handle_key_event( SDL_Event *e, struct load_menu *menu,
       struct menu_view *view );
 
 int handle_mouse_event( SDL_Event *e, struct load_menu *menu,
-      struct menu_view *view );
+      struct menu_view *view, SDL_Rect menu_squares[],
+     SDL_Rect back, SDL_Rect load );
 
 int render_load_menu( SDL_Renderer *renderer, struct menu_view *view,
       struct load_menu *menu, SDL_Rect menu_squares[],
       SDL_Point menu_corners[] );
+
+int draw_loadmenu_text( SDL_Renderer *renderer, struct load_menu *menu,
+      struct menu_view *view, SDL_Rect menu_squares[] );
 
 #endif
