@@ -10,7 +10,7 @@ int run_menu(struct run_menu_args* args)
 
    SDL_Renderer* renderer = NULL;
 
-   window = SDL_CreateWindow("Kenny's Ken Ken Ken-undrum",
+   window = SDL_CreateWindow("Mathdoku",
          SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
          MENU_WIDTH, MENU_HEIGHT, SDL_WINDOW_SHOWN);
 

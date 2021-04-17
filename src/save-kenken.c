@@ -25,7 +25,7 @@ int save_kenken(struct kenken *kkptr, int usrgrid[6][6], char* filename){
    if(snprintf(filepath, sizeof(filepath), "%s/savegames/%s.kenken", FILEPATH, filename) >= sizeof(filepath))
    {
       fprintf(stderr, "Filepath too long!!!\n");
-      return EXIT_FAILURE;
+      return 1;
    }
 	
 	FILE *kkfile = fopen(filepath, "w");
