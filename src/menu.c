@@ -348,6 +348,12 @@ int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu,
 
    DIR *dir = opendir( dir_buff );
 
+   if( !dir )
+   {
+      fprintf( stderr, "Error opening directory %s!\n", dir_buff );
+      return 1;
+   }
+
    while( ( direntry = readdir(dir) ) )
    {
       // Resize array if necessary

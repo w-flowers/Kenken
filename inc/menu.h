@@ -88,7 +88,7 @@ int run_menu(struct run_menu_args* args);
 int run_load_menu(struct load_menu_args* args);
 
 // Initialises load menu, creating a load menu item for each entry in the
-// directory savegames. This will segfault if savegames does not exist.
+// directory savegames. This will return 1 if savegames does not exist.
 // Allocates memory which must be freed in destroy load menu.
 int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu, 
       char *typeface );
