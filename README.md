@@ -1,6 +1,6 @@
 Mathdoku:
 
-A simple GUI program that allows the user to play a 6x6 mathdoku game.
+A simple GUI program that allows the user to play a 6x6 mathdoku (A.K.A. Kenken) game.
 
 To install:
 
