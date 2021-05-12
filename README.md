@@ -43,9 +43,13 @@ Features:
 
 - Screenshots:
 
-![solved game](res/img1.png)
+![solved game](res/img10.png)
 
-![new game](res/img2.png)
+![new game](res/img9.png)
 
-![partially completed game](res/img4.png)
+![partially completed game](res/img8.png)
+
+![start menu](res/img5.png)
+
+![load menu](res/img6.png)
 
