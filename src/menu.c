@@ -43,7 +43,7 @@ int run_menu(struct run_menu_args* args)
 
    SDL_Texture *newkktxt = NULL;
    int newkktxtdims[2];
-   char *nkkt = "New Kenken";
+   char *nkkt = "New Mathdoku";
    draw_button_text(renderer, &newkktxt, newkktxtdims, nkkt);
 
    //Button that loads a kenken
@@ -52,7 +52,7 @@ int run_menu(struct run_menu_args* args)
 
    SDL_Texture *loadkktxt = NULL;
    int loadkktxtdims[2];
-   char *lkkt = "Load Kenken";
+   char *lkkt = "Load Mathdoku";
    draw_button_text(renderer, &loadkktxt, loadkktxtdims, lkkt);
 
    //Button which quits the program
@@ -61,7 +61,7 @@ int run_menu(struct run_menu_args* args)
 
    SDL_Texture *quitkktxt = NULL;
    int quitkktxtdims[2];
-   char *qkkt = "Quit Kenken";
+   char *qkkt = "Quit Mathdoku";
    draw_button_text(renderer, &quitkktxt, quitkktxtdims, qkkt);
 
    SDL_Event e;
@@ -209,7 +209,7 @@ int run_load_menu(struct load_menu_args* args)
 
       SDL_Texture *loadkktxt = NULL;
       int loadkktxtdims[2];
-      char *lkkt = "Load Kenken";
+      char *lkkt = "Load Mathdoku";
       draw_button_text( args->renderer, &loadkktxt, loadkktxtdims, lkkt );
 
       //Button which goes back to main menu
@@ -387,7 +387,7 @@ int init_load_menu( SDL_Renderer *renderer, struct load_menu *menu,
 int create_load_menu_item( SDL_Renderer *renderer, struct load_menu_item *item, 
       struct dirent *entry, char *typeface )
 {
-   if( snprintf( item->filename, FILENM_SIZE, entry->d_name ) >= FILENM_SIZE )
+   if( snprintf( item->filename, FILENM_SIZE, "%s", entry->d_name ) >= FILENM_SIZE )
    {
       fprintf( stderr, "Filename too long\n" );
 

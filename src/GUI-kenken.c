@@ -144,7 +144,7 @@ int main( int argc, char* args[] )
 
          SDL_Texture *quitkktxt = NULL;
          int quitkktxtdims[2];
-         char *qkkt = "Quit Kenken";
+         char *qkkt = "Quit Mathdoku";
          draw_button_text(renderer, &quitkktxt, quitkktxtdims, qkkt);
 
 
@@ -154,7 +154,7 @@ int main( int argc, char* args[] )
 
          SDL_Texture *newkktxt = NULL;
          int newkktxtdims[2];
-         char *nkkt = "New Kenken";
+         char *nkkt = "New Mathdoku";
          draw_button_text(renderer, &newkktxt, newkktxtdims, nkkt);
 
 
@@ -164,7 +164,7 @@ int main( int argc, char* args[] )
 
          SDL_Texture *savekktxt = NULL;
          int savekktxtdims[2];
-         char *skkt = "Save Kenken";
+         char *skkt = "Save Mathdoku";
          draw_button_text(renderer, &savekktxt, savekktxtdims, skkt);
 
 
