@@ -8,7 +8,9 @@ Ensure that SDL2 and SDL_ttf are installed on your system. See https://www.libsd
 
 Clone this repository, and run "make all". This will create an executable "mathdoku".
 
-Context: This game was made entirely for my own development as a programmer, and is definitely still a work in progress. It began as an excuse to implement linked lists in C, as I figured that, since each constraint could be a different size, a linked list was an appropriate data structure. However, as I progressed, it began to take on its own life. 
+## Context:
+
+This game was made entirely for my own development as a programmer, and is definitely still a work in progress. It began as an excuse to implement linked lists in C, as I figured that, since each constraint could be a different size, a linked list was an appropriate data structure. However, as I progressed, it began to take on its own life. 
 
 As it developed, I had the chance to develop my skills developing a mid-sized c program, learnt about many particularities of pointers, memory allocation, arrays and functions that have massively improved my programming abilities. I also got to work with doubly-linked lists, 3rd party libraries, events, file I/O, and a huge variety of C data structures. 
 
